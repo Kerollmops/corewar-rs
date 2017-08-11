@@ -1,6 +1,2 @@
-[package]
-name = "corewar"
-version = "0.1.0"
-authors = ["Kerollmops <renault.cle@gmail.com>"]
-
-[dependencies]
+[workspace]
+members = ["./asm", "./vm", "./core"]
