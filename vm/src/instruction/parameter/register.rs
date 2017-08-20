@@ -1,9 +1,9 @@
 use std::io::Read;
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
-use parameter::REG_SIZE;
-use mem_size::MemSize;
-use ::REG_MAX;
+use instruction::parameter::REG_SIZE;
+use instruction::mem_size::MemSize;
+use core::REG_MAX;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InvalidRegister(pub u8);

@@ -2,6 +2,7 @@
 name = "vm"
 version = "0.1.0"
 dependencies = [
+ "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core 0.1.0",
 ]
 
@@ -17,9 +18,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "core"
 version = "0.1.0"
-dependencies = [
- "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [metadata]
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"

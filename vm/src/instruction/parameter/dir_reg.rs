@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::convert::TryFrom;
-use parameter::{Direct, Register, ParamType, InvalidRegister};
-use mem_size::MemSize;
+use instruction::parameter::{Direct, Register, ParamType, InvalidRegister};
+use instruction::mem_size::MemSize;
 
 #[derive(Debug, Clone, Copy)]
 pub enum InvalidDirReg {

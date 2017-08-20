@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::convert::TryFrom;
-use parameter::{Direct, Indirect, ParamType};
-use mem_size::MemSize;
+use instruction::parameter::{Direct, Indirect, ParamType};
+use instruction::mem_size::MemSize;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InvalidParamType;

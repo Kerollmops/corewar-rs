@@ -1,7 +1,7 @@
 use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
-use parameter::DIR_SIZE;
-use mem_size::MemSize;
+use instruction::parameter::DIR_SIZE;
+use instruction::mem_size::MemSize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direct(i32);

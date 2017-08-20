@@ -1,8 +1,12 @@
+#![feature(try_from)]
+
+extern crate byteorder;
 extern crate core;
 
 mod virtual_machine;
 mod arena;
 mod process;
+mod instruction;
 
 pub use virtual_machine::VirtualMachine;
 

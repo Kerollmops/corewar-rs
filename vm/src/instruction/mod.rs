@@ -1,8 +1,11 @@
+mod parameter;
+mod mem_size;
+
 use std::io::Read;
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
-use parameter::*;
-use mem_size::MemSize;
+use self::parameter::*;
+use self::mem_size::MemSize;
 
 const OP_CODE_SIZE:     usize = 1;
 const PARAM_CODE_SIZE:  usize = 1;
@@ -28,6 +31,30 @@ pub enum Instruction {
     LongLoadIndex(DirIndReg, DirReg, Register),
     Longfork(Direct),
     Display(Register),
+}
+
+impl Instruction {
+    pub fn cycle_cost(&self) -> usize {
+        match *self {
+            NoOp => 1,
+            Live(_) => 10,
+            Load(_, _) => 5,
+            Store(_, _) => 5,
+            Addition(_, _, _) => 10,
+            Substraction(_, _, _) => 10,
+            And(_, _, _) => 6,
+            Or(_, _, _) => 6,
+            Xor(_, _, _) => 6,
+            ZJump(_) => 20,
+            LoadIndex(_, _, _) => 25,
+            StoreIndex(_, _, _) => 25,
+            Fork(_) => 800,
+            LongLoad(_, _) => 10,
+            LongLoadIndex(_, _, _) => 50,
+            Longfork(_) => 1000,
+            Display(_) => 2,
+        }
+    }
 }
 
 impl MemSize for Instruction {

@@ -1,7 +1,3 @@
-#![feature(try_from)]
-
-extern crate byteorder;
-
 pub const IND_SIZE: usize = 2;
 pub const REG_SIZE: usize = 4;
 pub const DIR_SIZE: usize = REG_SIZE;
@@ -32,14 +28,10 @@ pub const MAX_CHECKS:   usize = 10;
 
 // typedef char	t_arg_type;
 
-const T_REG: u8 = 1;
-const T_DIR: u8 = 2;
-const T_IND: u8 = 4;
-const T_LAB: u8 = 8;
-
-mod mem_size;
-mod instruction;
-mod parameter;
+// const T_REG: u8 = 1;
+// const T_DIR: u8 = 2;
+// const T_IND: u8 = 4;
+// const T_LAB: u8 = 8;
 
 // /*
 // **

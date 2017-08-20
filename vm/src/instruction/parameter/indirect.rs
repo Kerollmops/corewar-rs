@@ -1,7 +1,7 @@
 use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
-use parameter::IND_SIZE;
-use mem_size::MemSize;
+use instruction::parameter::IND_SIZE;
+use instruction::mem_size::MemSize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Indirect(i16);
