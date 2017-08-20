@@ -68,9 +68,7 @@ impl Instruction {
             NoOp => context.pc += self.mem_size(),
             Live(player_id) => {
                 context.cycle_since_last_live = 0;
-                unimplemented!("Check if player exist with this id");
-                let player_id: i32 = player_id.into();
-                vm.set_last_living_player(player_id as usize);
+                let player = vm.set_last_living_player(player_id.into());
                 context.pc += self.mem_size();
             },
             Load(dir_ind, reg) => {
@@ -126,13 +124,11 @@ impl Instruction {
                 context.carry = { result == 0 };
                 context.pc += self.mem_size();
             },
-            ZJump(dir) => {
-                if context.carry {
-                    let value: i32 = dir.into();
-                    context.pc += value as usize % IDX_MOD;
-                } else {
-                    context.pc += self.mem_size();
-                }
+            ZJump(dir) => if context.carry {
+                let value: i32 = dir.into();
+                context.pc += value as usize % IDX_MOD;
+            } else {
+                context.pc += self.mem_size();
             },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let val_a = dir_ind_reg.get_value(vm, context);
@@ -151,13 +147,9 @@ impl Instruction {
             },
             Fork(dir) => {
                 let value: i32 = dir.into();
-
-                // TODO: create a function
-                let mut fork = context.clone();
+                let mut fork = context.clean_fork();
                 fork.pc += value as usize % IDX_MOD; // TODO: remove modulo
-                fork.cycle_since_last_live = 0;
-
-                vm.declare_new_process(fork);
+                vm.new_process(fork);
                 context.pc += self.mem_size();
             },
             LongLoad(dir_ind, reg) => {
@@ -174,13 +166,9 @@ impl Instruction {
             },
             Longfork(dir) => {
                 let value: i32 = dir.into();
-
-                // TODO: create a function
-                let mut fork = context.clone();
+                let mut fork = context.clean_fork();
                 fork.pc += value as usize;
-                fork.cycle_since_last_live = 0;
-
-                vm.declare_new_process(fork);
+                vm.new_process(fork);
                 context.pc += self.mem_size();
             },
             Display(reg) => {
@@ -352,7 +340,7 @@ impl<R: Read> From<R> for Instruction {
             },
             15 => Longfork(Direct::from(&mut reader)),
             16 => {
-                unimplemented!("need a useless ParamCode");
+                let _useless = try_param_type!(First, reader);
                 match Register::try_from(&mut reader) {
                     Ok(reg) => Display(reg),
                     _ => NoOp,

@@ -6,7 +6,7 @@ use instruction::Instruction;
 
 #[derive(Debug)]
 pub struct Process {
-    context: Context,
-    remaining_cycles: usize,
-    instruction: Instruction,
+    pub context: Context,
+    pub remaining_cycles: usize,
+    pub instruction: Instruction,
 }
