@@ -1,5 +1,5 @@
 use std::io::{self, Read, Write};
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 use core::MEM_SIZE;
 
 pub struct Arena {
@@ -16,7 +16,7 @@ impl Arena {
     }
 
     pub fn write_to(&mut self, ArenaIndex(index): ArenaIndex) -> ArenaWriter {
-        unimplemented!()
+        ArenaWriter { index, arena: self }
     }
 }
 
@@ -33,12 +33,16 @@ impl ArenaIndex {
         }
     }
 
+    pub fn zero() -> Self {
+        ArenaIndex(0)
+    }
+
     pub fn raw_index(&self) -> usize {
         self.0
     }
 }
 
-impl Add for ArenaIndex {
+impl Add<ArenaIndex> for ArenaIndex {
     type Output = ArenaIndex;
 
     fn add(self, ArenaIndex(rhs): ArenaIndex) -> Self {
@@ -47,6 +51,47 @@ impl Add for ArenaIndex {
         } else {
             ArenaIndex((self.0 + rhs) % MEM_SIZE)
         }
+    }
+}
+
+impl Add<isize> for ArenaIndex {
+    type Output = ArenaIndex;
+
+    fn add(self, mut rhs: isize) -> Self {
+        if rhs < 0 {
+            rhs = (rhs % MEM_SIZE as isize) + MEM_SIZE as isize;
+        }
+        ArenaIndex(((self.0 as isize + rhs) as usize) % MEM_SIZE)
+    }
+}
+
+impl Add<usize> for ArenaIndex {
+    type Output = ArenaIndex;
+
+    fn add(self, rhs: usize) -> Self {
+        self + ArenaIndex(rhs)
+    }
+}
+
+impl AddAssign for ArenaIndex {
+    fn add_assign(&mut self, ArenaIndex(rhs): ArenaIndex) {
+        if self.0 + rhs >= MEM_SIZE {
+            self.0 += rhs;
+        } else {
+            self.0 = (self.0 + rhs) % MEM_SIZE;
+        }
+    }
+}
+
+impl AddAssign<usize> for ArenaIndex {
+    fn add_assign(&mut self, rhs: usize) {
+        *self += ArenaIndex(rhs);
+    }
+}
+
+impl AddAssign<isize> for ArenaIndex {
+    fn add_assign(&mut self, rhs: isize) {
+        *self = *self + rhs;
     }
 }
 

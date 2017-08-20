@@ -1,10 +1,11 @@
 use std::ops::{Index, IndexMut, AddAssign, Add};
 use instruction::parameter::Register;
+use arena::ArenaIndex;
 use core::{REG_NUMBER, MEM_SIZE};
 
 #[derive(Debug)]
 pub struct Context {
-    pub pc: ProgramCounter,
+    pub pc: ArenaIndex,
     pub carry: bool,
     pub cycle_since_last_live: usize,
     pub registers: Registers,
@@ -17,61 +18,6 @@ impl Context {
             carry: self.carry,
             cycle_since_last_live: 0,
             registers: self.registers.clone()
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct ProgramCounter {
-    inner: usize,
-}
-
-impl ProgramCounter {
-    pub fn is_zero(&self) -> bool {
-        self.inner == 0
-    }
-
-    pub fn raw_value(&self) -> usize {
-        self.inner
-    }
-}
-
-// TODO: don't use modulo !
-impl AddAssign<isize> for ProgramCounter {
-    fn add_assign(&mut self, mut rhs: isize) {
-        if rhs < 0 {
-            rhs = (rhs % MEM_SIZE as isize) + MEM_SIZE as isize;
-        }
-        self.inner = ((self.inner as isize + rhs) as usize) % MEM_SIZE;
-    }
-}
-
-impl AddAssign<usize> for ProgramCounter {
-    fn add_assign(&mut self, rhs: usize) {
-        self.inner = (self.inner + rhs) % MEM_SIZE;
-    }
-}
-
-// TODO: don't use modulo !
-impl Add<isize> for ProgramCounter {
-    type Output = Self;
-
-    fn add(self, mut rhs: isize) -> Self::Output {
-        if rhs < 0 {
-            rhs = (rhs % MEM_SIZE as isize) + MEM_SIZE as isize;
-        }
-        ProgramCounter {
-            inner: ((self.inner as isize + rhs) as usize) % MEM_SIZE
-        }
-    }
-}
-
-impl Add<usize> for ProgramCounter {
-    type Output = Self;
-
-    fn add(self, rhs: usize) -> Self::Output {
-        ProgramCounter {
-            inner: (self.inner + rhs) % MEM_SIZE
         }
     }
 }

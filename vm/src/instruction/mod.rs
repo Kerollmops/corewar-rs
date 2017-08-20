@@ -10,6 +10,7 @@ use self::parameter::*;
 use self::mem_size::MemSize;
 use self::get_value::GetValue;
 use self::set_value::SetValue;
+use arena::ArenaIndex;
 use machine::Machine;
 use process::Context;
 use core::IDX_MOD;
@@ -127,7 +128,7 @@ impl Instruction {
             },
             ZJump(dir) => if context.carry {
                 let value: i32 = dir.into();
-                context.pc += value as usize % IDX_MOD;
+                context.pc += value as isize % IDX_MOD as isize;
             } else {
                 context.pc += self.mem_size();
             },
@@ -149,7 +150,7 @@ impl Instruction {
             Fork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
-                fork.pc += value as usize % IDX_MOD;
+                fork.pc += value as isize % IDX_MOD as isize;
                 vm.new_process(fork);
                 context.pc += self.mem_size();
             },
@@ -164,14 +165,13 @@ impl Instruction {
                 let val_b = dir_reg.get_value_long(vm, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
                 context.registers[reg] = addr.get_value_long(vm, context);
-                context.carry = { !context.pc.is_zero() };
+                context.carry = { context.pc != ArenaIndex::zero() };
                 context.pc += self.mem_size();
             },
             Longfork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc += value as isize;
-                unimplemented!("fork pc + isize");
                 vm.new_process(fork);
                 context.pc += self.mem_size();
             },
