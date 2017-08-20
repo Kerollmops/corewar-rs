@@ -2,7 +2,7 @@ use arena::Arena;
 use process::Process;
 
 // #[derive(Debug)]
-pub struct VirtualMachine {
+pub struct Machine {
     arena: Arena,
     processes: Vec<Process>,
 
@@ -10,9 +10,9 @@ pub struct VirtualMachine {
     number_of_lives: usize,
 }
 
-impl VirtualMachine {
+impl Machine {
     pub fn new() -> Self {
-        VirtualMachine {
+        Machine {
             arena: Arena::new(),
             processes: Vec::new(),
 

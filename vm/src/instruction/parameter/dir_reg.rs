@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, ParamType, InvalidRegister};
 use instruction::mem_size::MemSize;
 use instruction::get_value::GetValue;
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 
 #[derive(Debug, Clone, Copy)]
@@ -19,7 +19,7 @@ pub enum DirReg {
 }
 
 impl GetValue for DirReg {
-    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
+    fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
         match *self {
             DirReg::Direct(direct) => direct.get_value(vm, context),
             DirReg::Register(register) => register.get_value(vm, context),

@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect, ParamType};
 use instruction::mem_size::MemSize;
 use instruction::get_value::GetValue;
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 
 #[derive(Debug, Clone, Copy)]
@@ -15,20 +15,20 @@ pub enum DirInd {
     Indirect(Indirect),
 }
 
+impl GetValue for DirInd {
+    fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
+        match *self {
+            DirInd::Direct(direct) => direct.get_value(vm, context),
+            DirInd::Indirect(indirect) => indirect.get_value(vm, context),
+        }
+    }
+}
+
 impl MemSize for DirInd {
     fn mem_size(&self) -> usize {
         match *self {
             DirInd::Direct(direct) => direct.mem_size(),
             DirInd::Indirect(indirect) => indirect.mem_size(),
-        }
-    }
-}
-
-impl GetValue for DirInd {
-    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
-        match *self {
-            DirInd::Direct(direct) => direct.get_value(vm, context),
-            DirInd::Indirect(indirect) => indirect.get_value(vm, context),
         }
     }
 }

@@ -3,13 +3,13 @@
 extern crate byteorder;
 extern crate core;
 
-mod virtual_machine;
+mod machine;
 mod player;
 mod arena;
 mod process;
 mod instruction;
 
-pub use virtual_machine::VirtualMachine;
+pub use machine::Machine;
 
 // #[cfg(test)]
 // mod tests {

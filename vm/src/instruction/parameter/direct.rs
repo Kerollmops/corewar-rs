@@ -3,14 +3,14 @@ use byteorder::{BigEndian, ReadBytesExt};
 use instruction::parameter::DIR_SIZE;
 use instruction::mem_size::MemSize;
 use instruction::get_value::GetValue;
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direct(i32);
 
 impl GetValue for Direct {
-    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
+    fn get_value(&self, _vm: &Machine, _context: &Context) -> i32 {
         self.0
     }
 }

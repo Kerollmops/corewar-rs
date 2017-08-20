@@ -8,7 +8,7 @@ use byteorder::ReadBytesExt;
 use self::parameter::*;
 use self::mem_size::MemSize;
 use self::get_value::GetValue;
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 
 const OP_CODE_SIZE:     usize = 1;
@@ -60,7 +60,7 @@ impl Instruction {
         }
     }
 
-    pub fn execute<W: Write>(&self, vm: &mut VirtualMachine, context: &mut Context, output: &mut W) {
+    pub fn execute<W: Write>(&self, vm: &mut Machine, context: &mut Context, output: &mut W) {
         match *self {
             NoOp => context.pc += self.mem_size(),
             Live(player_id) => {

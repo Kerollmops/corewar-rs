@@ -1,6 +1,6 @@
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 
 pub trait GetValue {
-    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32;
+    fn get_value(&self, vm: &Machine, context: &Context) -> i32;
 }

@@ -4,7 +4,7 @@ use byteorder::ReadBytesExt;
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::MemSize;
 use instruction::get_value::GetValue;
-use virtual_machine::VirtualMachine;
+use machine::Machine;
 use process::Context;
 use core::REG_MAX;
 
@@ -15,7 +15,7 @@ pub struct InvalidRegister(pub u8);
 pub struct Register(u8);
 
 impl GetValue for Register {
-    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
+    fn get_value(&self, _vm: &Machine, context: &Context) -> i32 {
         context.registers[*self]
     }
 }
