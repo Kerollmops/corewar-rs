@@ -14,6 +14,6 @@ impl MemSize for Direct {
 
 impl<'a, R: Read> From<&'a mut R> for Direct {
     fn from(reader: &'a mut R) -> Self {
-        unimplemented!()
+        Direct(reader.read_i32::<BigEndian>().unwrap())
     }
 }

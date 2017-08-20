@@ -1,7 +1,6 @@
-use std::io::{self, Read, ErrorKind};
+use std::io::Read;
 use std::convert::TryFrom;
-use byteorder::{BigEndian, ReadBytesExt};
-use ::{REG_CODE, DIR_CODE, IND_CODE};
+use byteorder::ReadBytesExt;
 use parameter::*;
 use mem_size::MemSize;
 

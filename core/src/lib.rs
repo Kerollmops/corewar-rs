@@ -6,10 +6,6 @@ const IND_SIZE: usize = 2;
 const REG_SIZE: usize = 4;
 const DIR_SIZE: usize = REG_SIZE;
 
-const REG_CODE: u8 = 1;
-const DIR_CODE: u8 = 2;
-const IND_CODE: u8 = 3;
-
 const MAX_ARGS_NUMBER: i32 = 4;
 const MAX_PLAYERS:     i32 = 4;
 const MEM_SIZE:        i32 = 4 * 1024;
@@ -62,9 +58,9 @@ mod parameter;
 // }					header_t;
 
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn it_works() {
+//     }
+// }
