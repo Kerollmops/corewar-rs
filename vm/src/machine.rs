@@ -1,5 +1,5 @@
 use arena::Arena;
-use process::Process;
+use process::{Process, Context};
 
 // #[derive(Debug)]
 pub struct Machine {
@@ -24,5 +24,9 @@ impl Machine {
     pub fn set_last_living_player(&mut self, player_id: usize) {
         self.last_living_player = Some(player_id);
         self.number_of_lives += 1;
+    }
+
+    pub fn declare_new_process(&mut self, context: Context) {
+        unimplemented!()
     }
 }

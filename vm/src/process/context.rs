@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut, AddAssign};
 use instruction::parameter::Register;
 use core::{REG_NUMBER, MEM_SIZE};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Context {
     pub pc: ProgramCounter,
     pub carry: bool,
@@ -10,7 +10,7 @@ pub struct Context {
     pub registers: Registers,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProgramCounter {
     inner: usize,
 }
@@ -31,7 +31,7 @@ impl AddAssign<usize> for ProgramCounter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Registers {
     inner: [i32; REG_NUMBER]
 }

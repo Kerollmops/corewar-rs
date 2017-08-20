@@ -129,7 +129,7 @@ impl Instruction {
             ZJump(dir) => {
                 if context.carry {
                     let value: i32 = dir.into();
-                    unimplemented!("jump to given addr")
+                    context.pc += value as usize % IDX_MOD;
                 } else {
                     context.pc += self.mem_size();
                 }
@@ -150,7 +150,14 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             Fork(dir) => {
-                unimplemented!("fork with % IDX_MOD");
+                let value: i32 = dir.into();
+
+                // TODO: create a function
+                let mut fork = context.clone();
+                fork.pc += value as usize % IDX_MOD; // TODO: remove modulo
+                fork.cycle_since_last_live = 0;
+
+                vm.declare_new_process(fork);
                 context.pc += self.mem_size();
             },
             LongLoad(dir_ind, reg) => {
@@ -166,7 +173,14 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             Longfork(dir) => {
-                unimplemented!("LongFork");
+                let value: i32 = dir.into();
+
+                // TODO: create a function
+                let mut fork = context.clone();
+                fork.pc += value as usize;
+                fork.cycle_since_last_live = 0;
+
+                vm.declare_new_process(fork);
                 context.pc += self.mem_size();
             },
             Display(reg) => {
