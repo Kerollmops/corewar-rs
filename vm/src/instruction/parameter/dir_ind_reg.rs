@@ -1,13 +1,27 @@
 use std::io::Read;
 use std::convert::TryFrom;
-use instruction::parameter::{Direct, Indirect, ParamType, Register, InvalidRegister};
+use instruction::parameter::{Direct, Indirect, ParamType};
+use instruction::parameter::{Register, InvalidRegister};
 use instruction::mem_size::MemSize;
+use instruction::get_value::GetValue;
+use virtual_machine::VirtualMachine;
+use process::Context;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirIndReg {
     Direct(Direct),
     Indirect(Indirect),
     Register(Register),
+}
+
+impl GetValue for DirIndReg {
+    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
+        match *self {
+            DirIndReg::Direct(direct) => direct.get_value(vm, context),
+            DirIndReg::Indirect(indirect) => indirect.get_value(vm, context),
+            DirIndReg::Register(register) => register.get_value(vm, context),
+        }
+    }
 }
 
 impl MemSize for DirIndReg {

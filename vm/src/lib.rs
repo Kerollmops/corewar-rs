@@ -4,6 +4,7 @@ extern crate byteorder;
 extern crate core;
 
 mod virtual_machine;
+mod player;
 mod arena;
 mod process;
 mod instruction;

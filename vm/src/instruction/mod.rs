@@ -1,11 +1,13 @@
-mod parameter;
+pub mod parameter;
 mod mem_size;
+mod get_value;
 
-use std::io::Read;
+use std::io::{Read, Write};
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
 use self::parameter::*;
 use self::mem_size::MemSize;
+use self::get_value::GetValue;
 use virtual_machine::VirtualMachine;
 use process::Context;
 
@@ -58,8 +60,116 @@ impl Instruction {
         }
     }
 
-    pub fn execute(&self, vm: &mut VirtualMachine, context: &mut Context) {
-        unimplemented!()
+    pub fn execute<W: Write>(&self, vm: &mut VirtualMachine, context: &mut Context, output: &mut W) {
+        match *self {
+            NoOp => context.pc += self.mem_size(),
+            Live(player_id) => {
+                context.cycle_since_last_live = 0;
+                unimplemented!("Check if player exist with this id");
+                let player_id: i32 = player_id.into();
+                vm.set_last_living_player(player_id as usize);
+                context.pc += self.mem_size();
+            },
+            Load(dir_ind, reg) => {
+                unimplemented!("% IDX_MOD");
+                let value = dir_ind.get_value(vm, context);
+                context.registers[reg] = value;
+                context.pc += self.mem_size();
+            },
+            Store(reg, ind_reg) => {
+                let value = context.registers[reg];
+                match ind_reg {
+                    IndReg::Indirect(indirect) => unimplemented!("write inside vm"),
+                    IndReg::Register(register) => context.registers[reg] = value,
+                }
+                context.pc += self.mem_size();
+            },
+            Addition(reg_a, reg_b, reg_c) => {
+                let val_a = context.registers[reg_a];
+                let val_b = context.registers[reg_b];
+                let result = val_a.wrapping_add(val_b);
+                context.registers[reg_c] = result;
+                context.carry = { result == 0 };
+                context.pc += self.mem_size();
+            },
+            Substraction(reg_a, reg_b, reg_c) => {
+                let val_a = context.registers[reg_a];
+                let val_b = context.registers[reg_b];
+                let result = val_a.wrapping_sub(val_b);
+                context.registers[reg_c] = result;
+                context.carry = { result == 0 };
+                context.pc += self.mem_size();
+            },
+            And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
+                let val_a = dir_ind_reg_a.get_value(vm, context);
+                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let result = val_a & val_b;
+                context.registers[reg] = result;
+                context.carry = { result == 0 };
+                context.pc += self.mem_size();
+            },
+            Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
+                let val_a = dir_ind_reg_a.get_value(vm, context);
+                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let result = val_a | val_b;
+                context.registers[reg] = result;
+                context.carry = { result == 0 };
+                context.pc += self.mem_size();
+            },
+            Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
+                let val_a = dir_ind_reg_a.get_value(vm, context);
+                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let result = val_a ^ val_b;
+                context.registers[reg] = result;
+                context.carry = { result == 0 };
+                context.pc += self.mem_size();
+            },
+            ZJump(dir) => {
+                if context.carry {
+                    let value: i32 = dir.into();
+                    unimplemented!("jump to given addr")
+                } else {
+                    context.pc += self.mem_size();
+                }
+            },
+            LoadIndex(dir_ind_reg, dir_reg, reg) => {
+                unimplemented!("% IDX_MOD");
+                let val_a = dir_ind_reg.get_value(vm, context);
+                let val_b = dir_reg.get_value(vm, context);
+                let addr = val_a.wrapping_add(val_b);
+                context.registers[reg] = unimplemented!("get in value in memory");
+                context.pc += self.mem_size();
+            },
+            StoreIndex(reg, dir_ind_reg, dir_reg) => {
+                let value = context.registers[reg];
+                let val_a = dir_ind_reg.get_value(vm, context);
+                let val_b = dir_reg.get_value(vm, context);
+                let addr = val_a.wrapping_add(val_b);
+                unimplemented!("write value in memory");
+                context.pc += self.mem_size();
+            },
+            Fork(dir) => {
+                unimplemented!("fork with % IDX_MOD");
+                context.pc += self.mem_size();
+            },
+            LongLoad(dir_ind, reg) => {
+                unimplemented!("LongLoad");
+                context.pc += self.mem_size();
+            },
+            LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
+                unimplemented!("LongLoadIndex");
+                context.pc += self.mem_size();
+            },
+            Longfork(dir) => {
+                unimplemented!("LongFork");
+                context.pc += self.mem_size();
+            },
+            Display(reg) => {
+                let value = context.registers[reg] as u8; // FIXME: ???
+                let _ = output.write(&[value]); // FIXME: ignore errors ?
+                context.pc += self.mem_size();
+            },
+        }
     }
 }
 
@@ -82,7 +192,7 @@ impl MemSize for Instruction {
             LongLoad(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
             LongLoadIndex(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
             Longfork(a) => a.mem_size(),
-            Display(a) => a.mem_size(),
+            Display(a) => PARAM_CODE_SIZE + a.mem_size(),
         };
         OP_CODE_SIZE + size
     }
@@ -222,9 +332,12 @@ impl<R: Read> From<R> for Instruction {
                 }
             },
             15 => Longfork(Direct::from(&mut reader)),
-            16 => match Register::try_from(&mut reader) {
-                Ok(reg) => Display(reg),
-                _ => NoOp,
+            16 => {
+                unimplemented!("need a useless ParamCode");
+                match Register::try_from(&mut reader) {
+                    Ok(reg) => Display(reg),
+                    _ => NoOp,
+                }
             },
             _ => NoOp,
         }

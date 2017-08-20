@@ -2,6 +2,9 @@ use std::io::Read;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, ParamType, InvalidRegister};
 use instruction::mem_size::MemSize;
+use instruction::get_value::GetValue;
+use virtual_machine::VirtualMachine;
+use process::Context;
 
 #[derive(Debug, Clone, Copy)]
 pub enum InvalidDirReg {
@@ -13,6 +16,15 @@ pub enum InvalidDirReg {
 pub enum DirReg {
     Direct(Direct),
     Register(Register),
+}
+
+impl GetValue for DirReg {
+    fn get_value(&self, vm: &VirtualMachine, context: &Context) -> i32 {
+        match *self {
+            DirReg::Direct(direct) => direct.get_value(vm, context),
+            DirReg::Register(register) => register.get_value(vm, context),
+        }
+    }
 }
 
 impl MemSize for DirReg {
