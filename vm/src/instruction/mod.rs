@@ -72,14 +72,15 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             Load(dir_ind, reg) => {
-                let value = dir_ind.get_value_mod(vm, context, IDX_MOD);
+                let value = dir_ind.get_value(vm, context);
                 context.registers[reg] = value;
+                context.carry = { value == 0 };
                 context.pc += self.mem_size();
             },
             Store(reg, ind_reg) => {
                 let value = context.registers[reg];
                 match ind_reg {
-                    IndReg::Indirect(ind) => ind.set_value_mod(value, vm, context, IDX_MOD),
+                    IndReg::Indirect(ind) => ind.set_value(value, vm, context),
                     IndReg::Register(reg) => context.registers[reg] = value,
                 }
                 context.pc += self.mem_size();
@@ -134,7 +135,7 @@ impl Instruction {
                 let val_a = dir_ind_reg.get_value(vm, context);
                 let val_b = dir_reg.get_value(vm, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                context.registers[reg] = addr.get_value_mod(vm, context, IDX_MOD);
+                context.registers[reg] = addr.get_value(vm, context);
                 context.pc += self.mem_size();
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
@@ -142,32 +143,35 @@ impl Instruction {
                 let val_a = dir_ind_reg.get_value(vm, context);
                 let val_b = dir_reg.get_value(vm, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                addr.set_value_mod(value, vm, context, IDX_MOD);
+                addr.set_value(value, vm, context);
                 context.pc += self.mem_size();
             },
             Fork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
-                fork.pc += value as usize % IDX_MOD; // TODO: remove modulo
+                fork.pc += value as usize % IDX_MOD;
                 vm.new_process(fork);
                 context.pc += self.mem_size();
             },
             LongLoad(dir_ind, reg) => {
-                let value = dir_ind.get_value(vm, context);
+                let value = dir_ind.get_value_long(vm, context);
                 context.registers[reg] = value;
+                context.carry = true; // ???
                 context.pc += self.mem_size();
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
-                let val_a = dir_ind_reg.get_value(vm, context);
-                let val_b = dir_reg.get_value(vm, context);
+                let val_a = dir_ind_reg.get_value_long(vm, context);
+                let val_b = dir_reg.get_value_long(vm, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                context.registers[reg] = addr.get_value(vm, context);
+                context.registers[reg] = addr.get_value_long(vm, context);
+                context.carry = { !context.pc.is_zero() };
                 context.pc += self.mem_size();
             },
             Longfork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
-                fork.pc += value as usize;
+                fork.pc += value as isize;
+                unimplemented!("fork pc + isize");
                 vm.new_process(fork);
                 context.pc += self.mem_size();
             },

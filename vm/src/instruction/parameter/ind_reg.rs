@@ -26,10 +26,10 @@ impl GetValue for IndReg {
         }
     }
 
-    fn get_value_mod(&self, vm: &Machine, context: &Context, modulo: usize) -> i32 {
+    fn get_value_long(&self, vm: &Machine, context: &Context) -> i32 {
         match *self {
-            IndReg::Indirect(indirect) => indirect.get_value_mod(vm, context, modulo),
-            IndReg::Register(register) => register.get_value(vm, context),
+            IndReg::Indirect(indirect) => indirect.get_value_long(vm, context),
+            IndReg::Register(register) => register.get_value_long(vm, context),
         }
     }
 }

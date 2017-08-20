@@ -27,6 +27,10 @@ pub struct ProgramCounter {
 }
 
 impl ProgramCounter {
+    pub fn is_zero(&self) -> bool {
+        self.inner == 0
+    }
+
     pub fn raw_value(&self) -> usize {
         self.inner
     }

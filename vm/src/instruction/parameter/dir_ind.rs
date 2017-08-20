@@ -23,10 +23,10 @@ impl GetValue for DirInd {
         }
     }
 
-    fn get_value_mod(&self, vm: &Machine, context: &Context, modulo: usize) -> i32 {
+    fn get_value_long(&self, vm: &Machine, context: &Context) -> i32 {
         match *self {
-            DirInd::Direct(direct) => direct.get_value(vm, context),
-            DirInd::Indirect(indirect) => indirect.get_value_mod(vm, context, modulo),
+            DirInd::Direct(direct) => direct.get_value_long(vm, context),
+            DirInd::Indirect(indirect) => indirect.get_value_long(vm, context),
         }
     }
 }

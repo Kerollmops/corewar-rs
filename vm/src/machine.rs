@@ -36,13 +36,14 @@ impl Machine {
     }
 
     pub fn new_process(&mut self, context: Context) {
-        let mut reader = self.arena.read_from(context.pc.raw_value());
-        let instruction = Instruction::from(&mut reader);
-        let process = Process {
-            context: context,
-            remaining_cycles: instruction.cycle_cost(),
-            instruction: instruction,
-        };
-        self.processes.push(process);
+        unimplemented!();
+        // let mut reader = self.arena.read_from(context.pc.raw_value());
+        // let instruction = Instruction::from(&mut reader);
+        // let process = Process {
+        //     context: context,
+        //     remaining_cycles: instruction.cycle_cost(),
+        //     instruction: instruction,
+        // };
+        // self.processes.push(process);
     }
 }

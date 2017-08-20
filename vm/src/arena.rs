@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use std::ops::Add;
 use core::MEM_SIZE;
 
 pub struct Arena {
@@ -10,12 +11,42 @@ impl Arena {
         Arena { memory: [0; MEM_SIZE] }
     }
 
-    pub fn read_from(&self, index: usize) -> ArenaReader {
+    pub fn read_from(&self, ArenaIndex(index): ArenaIndex) -> ArenaReader {
         ArenaReader { index, arena: self }
     }
 
-    pub fn write_to(&mut self, index: usize) -> ArenaWriter {
+    pub fn write_to(&mut self, ArenaIndex(index): ArenaIndex) -> ArenaWriter {
         unimplemented!()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ArenaIndex(usize);
+
+impl ArenaIndex {
+    pub fn from_raw(index: usize) -> Self {
+        unimplemented!();
+        if index >= MEM_SIZE {
+            ArenaIndex(index)
+        } else {
+            ArenaIndex(index % MEM_SIZE)
+        }
+    }
+
+    pub fn raw_index(&self) -> usize {
+        self.0
+    }
+}
+
+impl Add for ArenaIndex {
+    type Output = ArenaIndex;
+
+    fn add(self, ArenaIndex(rhs): ArenaIndex) -> Self {
+        if self.0 + rhs >= MEM_SIZE {
+            ArenaIndex(self.0 + rhs)
+        } else {
+            ArenaIndex((self.0 + rhs) % MEM_SIZE)
+        }
     }
 }
 
