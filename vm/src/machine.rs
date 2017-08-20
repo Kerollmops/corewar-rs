@@ -6,7 +6,7 @@ use arena::Arena;
 
 // #[derive(Debug)]
 pub struct Machine {
-    arena: Arena,
+    pub arena: Arena,
     players: HashMap<i32, Player>,
     processes: Vec<Process>,
     last_living_player: Option<i32>,

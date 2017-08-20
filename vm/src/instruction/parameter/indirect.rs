@@ -1,5 +1,5 @@
 use std::io::Read;
-use byteorder::{BigEndian, ReadBytesExt};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::MemSize;
 use instruction::get_value::GetValue;
@@ -12,21 +12,29 @@ pub struct Indirect(i16);
 
 impl GetValue for Indirect {
     fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
-        unimplemented!()
+        let addr = context.pc + self.0 as isize;
+        let mut reader = vm.arena.read_from(addr.raw_value());
+        reader.read_i32::<BigEndian>().unwrap()
     }
 
     fn get_value_mod(&self, vm: &Machine, context: &Context, modulo: usize) -> i32 {
-        unimplemented!()
+        let addr = context.pc + (self.0 as isize % modulo as isize);
+        let mut reader = vm.arena.read_from(addr.raw_value());
+        reader.read_i32::<BigEndian>().unwrap()
     }
 }
 
 impl SetValue for Indirect {
-    fn set_value(&self, value: i32, vm: &Machine, context: &Context) {
-        unimplemented!()
+    fn set_value(&self, value: i32, vm: &mut Machine, context: &Context) {
+        let addr = context.pc + self.0 as isize;
+        let mut writer = vm.arena.write_to(addr.raw_value());
+        writer.write_i32::<BigEndian>(value).unwrap();
     }
 
-    fn set_value_mod(&self, value: i32, vm: &Machine, context: &Context, modulo: usize) {
-        unimplemented!()
+    fn set_value_mod(&self, value: i32, vm: &mut Machine, context: &Context, modulo: usize) {
+        let addr = context.pc + (self.0 as isize % modulo as isize);
+        let mut writer = vm.arena.write_to(addr.raw_value());
+        writer.write_i32::<BigEndian>(value).unwrap();
     }
 }
 

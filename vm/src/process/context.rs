@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut, AddAssign};
+use std::ops::{Index, IndexMut, AddAssign, Add};
 use instruction::parameter::Register;
 use core::{REG_NUMBER, MEM_SIZE};
 
@@ -21,7 +21,7 @@ impl Context {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ProgramCounter {
     inner: usize,
 }
@@ -45,6 +45,30 @@ impl AddAssign<isize> for ProgramCounter {
 impl AddAssign<usize> for ProgramCounter {
     fn add_assign(&mut self, rhs: usize) {
         self.inner = (self.inner + rhs) % MEM_SIZE;
+    }
+}
+
+// TODO: don't use modulo !
+impl Add<isize> for ProgramCounter {
+    type Output = Self;
+
+    fn add(self, mut rhs: isize) -> Self::Output {
+        if rhs < 0 {
+            rhs = (rhs % MEM_SIZE as isize) + MEM_SIZE as isize;
+        }
+        ProgramCounter {
+            inner: ((self.inner as isize + rhs) as usize) % MEM_SIZE
+        }
+    }
+}
+
+impl Add<usize> for ProgramCounter {
+    type Output = Self;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        ProgramCounter {
+            inner: (self.inner + rhs) % MEM_SIZE
+        }
     }
 }
 
