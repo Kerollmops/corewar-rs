@@ -2,33 +2,33 @@
 
 extern crate byteorder;
 
-const IND_SIZE: usize = 2;
-const REG_SIZE: usize = 4;
-const DIR_SIZE: usize = REG_SIZE;
+pub const IND_SIZE: usize = 2;
+pub const REG_SIZE: usize = 4;
+pub const DIR_SIZE: usize = REG_SIZE;
 
-const MAX_ARGS_NUMBER: i32 = 4;
-const MAX_PLAYERS:     i32 = 4;
-const MEM_SIZE:        i32 = 4 * 1024;
-const IDX_MOD:         i32 = MEM_SIZE / 8;
-const CHAMP_MAX_SIZE:  i32 = MEM_SIZE / 6;
+pub const MAX_ARGS_NUMBER: usize = 4;
+pub const MAX_PLAYERS:     usize = 4;
+pub const MEM_SIZE:        usize = 4 * 1024;
+pub const IDX_MOD:         usize = MEM_SIZE / 8;
+pub const CHAMP_MAX_SIZE:  usize = MEM_SIZE / 6;
 
-const COMMENT_CHAR:    char = '#';
-const LABEL_CHAR:      char = ':';
-const DIRECT_CHAR:     char = '%';
-const SEPARATOR_CHAR:  char = ',';
+pub const COMMENT_CHAR:    char = '#';
+pub const LABEL_CHAR:      char = ':';
+pub const DIRECT_CHAR:     char = '%';
+pub const SEPARATOR_CHAR:  char = ',';
 
-const LABEL_CHARS: &str = "abcdefghijklmnopqrstuvwxyz_0123456789";
+pub const LABEL_CHARS: &str = "abcdefghijklmnopqrstuvwxyz_0123456789";
 
-const NAME_CMD_STRING:    &str = ".name";
-const COMMENT_CMD_STRING: &str = ".comment";
+pub const NAME_CMD_STRING:    &str = ".name";
+pub const COMMENT_CMD_STRING: &str = ".comment";
 
-const REG_NUMBER: usize = 16;
-const REG_MAX:       u8 = REG_NUMBER as u8;
+pub const REG_NUMBER: usize = 16;
+pub const REG_MAX:       u8 = REG_NUMBER as u8;
 
-const CYCLE_TO_DIE: usize = 1536;
-const CYCLE_DELTA:  usize = 50;
-const NBR_LIVE:     usize = 21;
-const MAX_CHECKS:   usize = 10;
+pub const CYCLE_TO_DIE: usize = 1536;
+pub const CYCLE_DELTA:  usize = 50;
+pub const NBR_LIVE:     usize = 21;
+pub const MAX_CHECKS:   usize = 10;
 
 // typedef char	t_arg_type;
 
