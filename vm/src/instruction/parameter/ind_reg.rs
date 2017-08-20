@@ -25,6 +25,13 @@ impl GetValue for IndReg {
             IndReg::Register(register) => register.get_value(vm, context),
         }
     }
+
+    fn get_value_mod(&self, vm: &Machine, context: &Context, modulo: usize) -> i32 {
+        match *self {
+            IndReg::Indirect(indirect) => indirect.get_value_mod(vm, context, modulo),
+            IndReg::Register(register) => register.get_value(vm, context),
+        }
+    }
 }
 
 impl MemSize for IndReg {

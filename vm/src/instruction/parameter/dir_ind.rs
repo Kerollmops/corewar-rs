@@ -22,6 +22,13 @@ impl GetValue for DirInd {
             DirInd::Indirect(indirect) => indirect.get_value(vm, context),
         }
     }
+
+    fn get_value_mod(&self, vm: &Machine, context: &Context, modulo: usize) -> i32 {
+        match *self {
+            DirInd::Direct(direct) => direct.get_value(vm, context),
+            DirInd::Indirect(indirect) => indirect.get_value_mod(vm, context, modulo),
+        }
+    }
 }
 
 impl MemSize for DirInd {

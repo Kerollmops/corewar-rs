@@ -1,6 +1,7 @@
 pub mod parameter;
 mod mem_size;
 mod get_value;
+mod set_value;
 
 use std::io::{Read, Write};
 use std::convert::TryFrom;
@@ -8,8 +9,10 @@ use byteorder::ReadBytesExt;
 use self::parameter::*;
 use self::mem_size::MemSize;
 use self::get_value::GetValue;
+use self::set_value::SetValue;
 use machine::Machine;
 use process::Context;
+use core::IDX_MOD;
 
 const OP_CODE_SIZE:     usize = 1;
 const PARAM_CODE_SIZE:  usize = 1;
@@ -71,16 +74,15 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             Load(dir_ind, reg) => {
-                unimplemented!("% IDX_MOD");
-                let value = dir_ind.get_value(vm, context);
+                let value = dir_ind.get_value_mod(vm, context, IDX_MOD);
                 context.registers[reg] = value;
                 context.pc += self.mem_size();
             },
             Store(reg, ind_reg) => {
                 let value = context.registers[reg];
                 match ind_reg {
-                    IndReg::Indirect(indirect) => unimplemented!("write inside vm"),
-                    IndReg::Register(register) => context.registers[reg] = value,
+                    IndReg::Indirect(ind) => ind.set_value_mod(value, vm, context, IDX_MOD),
+                    IndReg::Register(reg) => context.registers[reg] = value,
                 }
                 context.pc += self.mem_size();
             },
@@ -133,19 +135,18 @@ impl Instruction {
                 }
             },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
-                unimplemented!("% IDX_MOD");
                 let val_a = dir_ind_reg.get_value(vm, context);
                 let val_b = dir_reg.get_value(vm, context);
-                let addr = val_a.wrapping_add(val_b);
-                context.registers[reg] = unimplemented!("get in value in memory");
+                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                context.registers[reg] = addr.get_value_mod(vm, context, IDX_MOD);
                 context.pc += self.mem_size();
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
                 let value = context.registers[reg];
                 let val_a = dir_ind_reg.get_value(vm, context);
                 let val_b = dir_reg.get_value(vm, context);
-                let addr = val_a.wrapping_add(val_b);
-                unimplemented!("write value in memory");
+                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                addr.set_value_mod(value, vm, context, IDX_MOD);
                 context.pc += self.mem_size();
             },
             Fork(dir) => {
@@ -153,11 +154,15 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             LongLoad(dir_ind, reg) => {
-                unimplemented!("LongLoad");
+                let value = dir_ind.get_value(vm, context);
+                context.registers[reg] = value;
                 context.pc += self.mem_size();
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
-                unimplemented!("LongLoadIndex");
+                let val_a = dir_ind_reg.get_value(vm, context);
+                let val_b = dir_reg.get_value(vm, context);
+                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                context.registers[reg] = addr.get_value(vm, context);
                 context.pc += self.mem_size();
             },
             Longfork(dir) => {
@@ -165,8 +170,8 @@ impl Instruction {
                 context.pc += self.mem_size();
             },
             Display(reg) => {
-                let value = context.registers[reg] as u8; // FIXME: ???
-                let _ = output.write(&[value]); // FIXME: ignore errors ?
+                let value = context.registers[reg] as u8;
+                let _ = output.write(&[value]);
                 context.pc += self.mem_size();
             },
         }
