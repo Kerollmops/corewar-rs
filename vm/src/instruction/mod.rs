@@ -6,6 +6,8 @@ use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
 use self::parameter::*;
 use self::mem_size::MemSize;
+use virtual_machine::VirtualMachine;
+use process::Context;
 
 const OP_CODE_SIZE:     usize = 1;
 const PARAM_CODE_SIZE:  usize = 1;
@@ -54,6 +56,10 @@ impl Instruction {
             Longfork(_) => 1000,
             Display(_) => 2,
         }
+    }
+
+    pub fn execute(&self, vm: &mut VirtualMachine, context: &mut Context) {
+        unimplemented!()
     }
 }
 
