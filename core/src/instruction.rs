@@ -1,105 +1,12 @@
+use std::io::{self, Read, ErrorKind};
 use std::convert::TryFrom;
-use std::io::{self, Read};
 use byteorder::{BigEndian, ReadBytesExt};
+use ::{REG_CODE, DIR_CODE, IND_CODE};
+use parameter::*;
+use mem_size::MemSize;
 
 const OP_CODE_SIZE:     usize = 1;
 const PARAM_CODE_SIZE:  usize = 1;
-
-const REG_SIZE:         usize = 1;
-const DIR_SIZE:         usize = 4;
-const IND_SIZE:         usize = 2;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParamCode(u8);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Direct(i32);
-
-impl Direct {
-    pub fn mem_size(&self) -> usize {
-        DIR_SIZE
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Indirect(i16);
-
-impl Indirect {
-    pub fn mem_size(&self) -> usize {
-        IND_SIZE
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Register(u8);
-
-impl Register {
-    pub fn mem_size(&self) -> usize {
-        REG_SIZE
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum DirInd {
-    Direct(Direct),
-    Indirect(Indirect),
-}
-
-impl DirInd {
-    pub fn mem_size(&self) -> usize {
-        match *self {
-            DirInd::Direct(direct) => direct.mem_size(),
-            DirInd::Indirect(indirect) => indirect.mem_size(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum IndReg {
-    Indirect(Indirect),
-    Register(Register),
-}
-
-impl IndReg {
-    pub fn mem_size(&self) -> usize {
-        match *self {
-            IndReg::Indirect(indirect) => indirect.mem_size(),
-            IndReg::Register(register) => register.mem_size(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum DirReg {
-    Direct(Direct),
-    Register(Register),
-}
-
-impl DirReg {
-    pub fn mem_size(&self) -> usize {
-        match *self {
-            DirReg::Direct(direct) => direct.mem_size(),
-            DirReg::Register(register) => register.mem_size(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum DirIndReg {
-    Direct(Direct),
-    Indirect(Indirect),
-    Register(Register),
-}
-
-impl DirIndReg {
-    pub fn mem_size(&self) -> usize {
-        match *self {
-            DirIndReg::Direct(direct) => direct.mem_size(),
-            DirIndReg::Indirect(indirect) => indirect.mem_size(),
-            DirIndReg::Register(register) => register.mem_size(),
-        }
-    }
-}
 
 use self::Instruction::*;
 
@@ -124,9 +31,8 @@ pub enum Instruction {
     Display(Register),
 }
 
-impl Instruction {
-    /// The number of bytes this instruction takes.
-    pub fn mem_size(&self) -> usize {
+impl MemSize for Instruction {
+    fn mem_size(&self) -> usize {
         let size = match *self {
             NoOp => 0,
             Live(a) => a.mem_size(),
@@ -150,35 +56,145 @@ impl Instruction {
     }
 }
 
-impl<'a, R: Read> TryFrom<&'a mut R> for Instruction {
-    type Error = io::Error;
+macro_rules! try_param_type {
+    ($n:expr, $r:expr) => ({
+        use self::ParamNumber::*;
+        match ParamCode::from(&mut $r).param_type_of($n) {
+            Ok(param_code) => param_code,
+            Err(_) => return NoOp,
+        }
+    });
+}
 
-    fn try_from(buf: &'a mut R) -> Result<Self, Self::Error> {
-        Ok(match buf.read_u8()? {
-            1 => {
-                let dir = buf.read_i32::<BigEndian>()?;
-                Live(Direct(dir))
-            },
+impl<R: Read> From<R> for Instruction {
+    fn from(mut reader: R) -> Self {
+        match reader.read_u8().unwrap() {
+            1 => Live(Direct::from(&mut reader)),
             2 => {
-                let param_code = buf.read_u8()?;
-                //
-                Load(unimplemented!(), unimplemented!())
+                let param_code = try_param_type!(First, reader);
+                match (DirInd::try_from((param_code, &mut reader)), Register::try_from(&mut reader)) {
+                    (Ok(dir_ind), Ok(reg)) => Load(dir_ind, reg),
+                    _ => NoOp,
+                }
             },
-            3 => Store(unimplemented!(), unimplemented!()),
-            4 => Addition(unimplemented!(), unimplemented!(), unimplemented!()),
-            5 => Substraction(unimplemented!(), unimplemented!(), unimplemented!()),
-            6 => And(unimplemented!(), unimplemented!(), unimplemented!()),
-            7 => Or(unimplemented!(), unimplemented!(), unimplemented!()),
-            8 => Xor(unimplemented!(), unimplemented!(), unimplemented!()),
-            9 => ZJump(unimplemented!()),
-            10 => LoadIndex(unimplemented!(), unimplemented!(), unimplemented!()),
-            11 => StoreIndex(unimplemented!(), unimplemented!(), unimplemented!()),
-            12 => Fork(unimplemented!()),
-            13 => LongLoad(unimplemented!(), unimplemented!()),
-            14 => LongLoadIndex(unimplemented!(), unimplemented!(), unimplemented!()),
-            15 => Longfork(unimplemented!()),
-            16 => Display(unimplemented!()),
+            3 => {
+                let param_code = try_param_type!(Second, reader);
+                match (Register::try_from(&mut reader), IndReg::try_from((param_code, &mut reader))) {
+                    (Ok(reg), Ok(ind_reg)) => Store(reg, ind_reg),
+                    _ => NoOp,
+                }
+            },
+            4 => {
+                let reg_a = Register::try_from(&mut reader);
+                let reg_b = Register::try_from(&mut reader);
+                let reg_c = Register::try_from(&mut reader);
+                match (reg_a, reg_b, reg_c) {
+                    (Ok(a), Ok(b), Ok(c)) => Addition(a, b, c),
+                    _ => NoOp,
+                }
+            },
+            5 => {
+                let reg_a = Register::try_from(&mut reader);
+                let reg_b = Register::try_from(&mut reader);
+                let reg_c = Register::try_from(&mut reader);
+                match (reg_a, reg_b, reg_c) {
+                    (Ok(a), Ok(b), Ok(c)) => Substraction(a, b, c),
+                    _ => NoOp,
+                }
+            },
+            6 => {
+                let first_type = try_param_type!(First, reader);
+                let second_type = try_param_type!(Second, reader);
+
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
+                let reg = Register::try_from(&mut reader);
+
+                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
+                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => And(dir_ind_reg_a, dir_ind_reg_b, reg),
+                    _ => NoOp,
+                }
+            },
+            7 => {
+                let first_type = try_param_type!(First, reader);
+                let second_type = try_param_type!(Second, reader);
+
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
+                let reg = Register::try_from(&mut reader);
+
+                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
+                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => Or(dir_ind_reg_a, dir_ind_reg_b, reg),
+                    _ => NoOp,
+                }
+            },
+            8 => {
+                let first_type = try_param_type!(First, reader);
+                let second_type = try_param_type!(Second, reader);
+
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
+                let reg = Register::try_from(&mut reader);
+
+                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
+                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => Xor(dir_ind_reg_a, dir_ind_reg_b, reg),
+                    _ => NoOp,
+                }
+            },
+            9 => ZJump(Direct::from(&mut reader)),
+            10 => {
+                let first_type = try_param_type!(First, reader);
+                let second_type = try_param_type!(Second, reader);
+
+                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader));
+                let dir_reg = DirReg::try_from((second_type, &mut reader));
+                let reg = Register::try_from(&mut reader);
+
+                match (dir_ind_reg, dir_reg, reg) {
+                    (Ok(dir_ind_reg), Ok(dir_reg), Ok(reg)) => LoadIndex(dir_ind_reg, dir_reg, reg),
+                    _ => NoOp,
+                }
+            },
+            11 => {
+                let second_type = try_param_type!(Second, reader);
+                let third_type = try_param_type!(Third, reader);
+
+                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg = DirIndReg::try_from((second_type, &mut reader));
+                let dir_reg = DirReg::try_from((third_type, &mut reader));
+
+                match (reg, dir_ind_reg, dir_reg) {
+                    (Ok(reg), Ok(dir_ind_reg), Ok(dir_reg)) => StoreIndex(reg, dir_ind_reg, dir_reg),
+                    _ => NoOp,
+                }
+            },
+            12 => Fork(Direct::from(&mut reader)),
+            13 => {
+                let first_type = try_param_type!(First, reader);
+                match (DirInd::try_from((first_type, &mut reader)), Register::try_from(&mut reader)) {
+                    (Ok(dir_ind), Ok(reg)) => LongLoad(dir_ind, reg),
+                    _ => NoOp,
+                }
+            },
+            14 => {
+                let first_type = try_param_type!(First, reader);
+                let second_type = try_param_type!(Second, reader);
+
+                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader));
+                let dir_reg = DirReg::try_from((second_type, &mut reader));
+                let reg = Register::try_from(&mut reader);
+
+                match (dir_ind_reg, dir_reg, reg) {
+                    (Ok(dir_ind_reg), Ok(dir_reg), Ok(reg)) => LongLoadIndex(dir_ind_reg, dir_reg, reg),
+                    _ => NoOp,
+                }
+            },
+            15 => Longfork(Direct::from(&mut reader)),
+            16 => match Register::try_from(&mut reader) {
+                Ok(reg) => Display(reg),
+                _ => NoOp,
+            },
             _ => NoOp,
-        })
+        }
     }
 }
