@@ -219,136 +219,114 @@ macro_rules! try_param_type {
     });
 }
 
+macro_rules! try_param {
+    ($t:ident, $p:expr) => (match $t::try_from($p) {
+        Ok(instr) => instr,
+        Err(_) => return NoOp,
+    })
+}
+
 impl<R: Read> From<R> for Instruction {
     fn from(mut reader: R) -> Self {
         match reader.read_u8().unwrap() {
             1 => Live(Direct::from(&mut reader)),
             2 => {
                 let param_code = try_param_type!(First, reader);
-                match (DirInd::try_from((param_code, &mut reader)), Register::try_from(&mut reader)) {
-                    (Ok(dir_ind), Ok(reg)) => Load(dir_ind, reg),
-                    _ => NoOp,
-                }
+                let dir_ind = try_param!(DirInd, (param_code, &mut reader));
+                let reg = try_param!(Register, &mut reader);
+                Load(dir_ind, reg)
             },
             3 => {
                 let param_code = try_param_type!(Second, reader);
-                match (Register::try_from(&mut reader), IndReg::try_from((param_code, &mut reader))) {
-                    (Ok(reg), Ok(ind_reg)) => Store(reg, ind_reg),
-                    _ => NoOp,
-                }
+                let reg = try_param!(Register, &mut reader);
+                let ind_reg = try_param!(IndReg, (param_code, &mut reader));
+                Store(reg, ind_reg)
             },
             4 => {
-                let reg_a = Register::try_from(&mut reader);
-                let reg_b = Register::try_from(&mut reader);
-                let reg_c = Register::try_from(&mut reader);
-                match (reg_a, reg_b, reg_c) {
-                    (Ok(a), Ok(b), Ok(c)) => Addition(a, b, c),
-                    _ => NoOp,
-                }
+                let reg_a = try_param!(Register, &mut reader);
+                let reg_b = try_param!(Register, &mut reader);
+                let reg_c = try_param!(Register, &mut reader);
+                Addition(reg_a, reg_b, reg_c)
             },
             5 => {
-                let reg_a = Register::try_from(&mut reader);
-                let reg_b = Register::try_from(&mut reader);
-                let reg_c = Register::try_from(&mut reader);
-                match (reg_a, reg_b, reg_c) {
-                    (Ok(a), Ok(b), Ok(c)) => Substraction(a, b, c),
-                    _ => NoOp,
-                }
+                let reg_a = try_param!(Register, &mut reader);
+                let reg_b = try_param!(Register, &mut reader);
+                let reg_c = try_param!(Register, &mut reader);
+                Substraction(reg_a, reg_b, reg_c)
             },
             6 => {
                 let first_type = try_param_type!(First, reader);
                 let second_type = try_param_type!(Second, reader);
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
-                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
+                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
 
-                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
-                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => And(dir_ind_reg_a, dir_ind_reg_b, reg),
-                    _ => NoOp,
-                }
+                And(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             7 => {
                 let first_type = try_param_type!(First, reader);
                 let second_type = try_param_type!(Second, reader);
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
-                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
+                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
 
-                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
-                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => Or(dir_ind_reg_a, dir_ind_reg_b, reg),
-                    _ => NoOp,
-                }
+                Or(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             8 => {
                 let first_type = try_param_type!(First, reader);
                 let second_type = try_param_type!(Second, reader);
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader));
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader));
-                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
+                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
 
-                match (dir_ind_reg_a, dir_ind_reg_b, reg) {
-                    (Ok(dir_ind_reg_a), Ok(dir_ind_reg_b), Ok(reg)) => Xor(dir_ind_reg_a, dir_ind_reg_b, reg),
-                    _ => NoOp,
-                }
+                Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             9 => ZJump(Direct::from(&mut reader)),
             10 => {
                 let first_type = try_param_type!(First, reader);
                 let second_type = try_param_type!(Second, reader);
 
-                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader));
-                let dir_reg = DirReg::try_from((second_type, &mut reader));
-                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
+                let dir_reg = try_param!(DirReg, (second_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
 
-                match (dir_ind_reg, dir_reg, reg) {
-                    (Ok(dir_ind_reg), Ok(dir_reg), Ok(reg)) => LoadIndex(dir_ind_reg, dir_reg, reg),
-                    _ => NoOp,
-                }
+                LoadIndex(dir_ind_reg, dir_reg, reg)
             },
             11 => {
                 let second_type = try_param_type!(Second, reader);
                 let third_type = try_param_type!(Third, reader);
 
-                let reg = Register::try_from(&mut reader);
-                let dir_ind_reg = DirIndReg::try_from((second_type, &mut reader));
-                let dir_reg = DirReg::try_from((third_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg = try_param!(DirIndReg, (second_type, &mut reader));
+                let dir_reg = try_param!(DirReg, (third_type, &mut reader));
 
-                match (reg, dir_ind_reg, dir_reg) {
-                    (Ok(reg), Ok(dir_ind_reg), Ok(dir_reg)) => StoreIndex(reg, dir_ind_reg, dir_reg),
-                    _ => NoOp,
-                }
+                StoreIndex(reg, dir_ind_reg, dir_reg)
             },
             12 => Fork(Direct::from(&mut reader)),
             13 => {
                 let first_type = try_param_type!(First, reader);
-                match (DirInd::try_from((first_type, &mut reader)), Register::try_from(&mut reader)) {
-                    (Ok(dir_ind), Ok(reg)) => LongLoad(dir_ind, reg),
-                    _ => NoOp,
-                }
+                let dir_ind = try_param!(DirInd, (first_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
+                LongLoad(dir_ind, reg)
             },
             14 => {
                 let first_type = try_param_type!(First, reader);
                 let second_type = try_param_type!(Second, reader);
 
-                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader));
-                let dir_reg = DirReg::try_from((second_type, &mut reader));
-                let reg = Register::try_from(&mut reader);
+                let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
+                let dir_reg = try_param!(DirReg, (second_type, &mut reader));
+                let reg = try_param!(Register, &mut reader);
 
-                match (dir_ind_reg, dir_reg, reg) {
-                    (Ok(dir_ind_reg), Ok(dir_reg), Ok(reg)) => LongLoadIndex(dir_ind_reg, dir_reg, reg),
-                    _ => NoOp,
-                }
+                LongLoadIndex(dir_ind_reg, dir_reg, reg)
             },
             15 => Longfork(Direct::from(&mut reader)),
             16 => {
                 let _useless = try_param_type!(First, reader);
-                match Register::try_from(&mut reader) {
-                    Ok(reg) => Display(reg),
-                    _ => NoOp,
-                }
+                let reg = try_param!(Register, &mut reader);
+                Display(reg)
             },
             _ => NoOp,
         }
