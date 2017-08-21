@@ -48,11 +48,3 @@ pub const MAX_CHECKS:   usize = 10;
 //   unsigned int		prog_size;
 //   char				comment[COMMENT_LENGTH + 1];
 // }					header_t;
-
-
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn it_works() {
-//     }
-// }

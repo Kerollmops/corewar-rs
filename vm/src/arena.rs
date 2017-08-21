@@ -42,7 +42,7 @@ impl ArenaIndex {
         } else {
             value as usize
         };
-        ArenaIndex(value).advance_by(value)
+        self.advance_by(value)
     }
 }
 
@@ -53,8 +53,19 @@ pub struct ArenaReader<'a> {
 
 impl<'a> Read for ArenaReader<'a> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut buf_index = 0;
         let memory = self.arena.memory;
-        unimplemented!()
+
+        while buf_index != buf.len() {
+            buf[buf_index] = memory[self.index];
+            buf_index += 1;
+            self.index += 1;
+            if self.index == memory.len() {
+                self.index = 0;
+            }
+        }
+
+        Ok(buf.len())
     }
 }
 
@@ -65,10 +76,32 @@ pub struct ArenaWriter<'a> {
 
 impl<'a> Write for ArenaWriter<'a> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        unimplemented!()
+        let mut buf_index = 0;
+        let mut memory = self.arena.memory;
+
+        while buf_index != buf.len() {
+            memory[self.index] = buf[buf_index];
+            buf_index += 1;
+            self.index += 1;
+            if self.index == memory.len() {
+                self.index = 0;
+            }
+        }
+
+        Ok(buf.len())
     }
 
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        //
     }
 }
