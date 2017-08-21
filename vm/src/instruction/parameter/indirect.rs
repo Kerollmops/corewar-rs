@@ -13,13 +13,13 @@ pub struct Indirect(i16);
 
 impl GetValue for Indirect {
     fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
-        let addr = context.pc + (self.0 as isize % IDX_MOD as isize);
+        let addr = context.pc.move_by(self.0 as isize % IDX_MOD as isize);
         let mut reader = vm.arena.read_from(addr);
         reader.read_i32::<BigEndian>().unwrap()
     }
 
     fn get_value_long(&self, vm: &Machine, context: &Context) -> i32 {
-        let addr = context.pc + self.0 as isize;
+        let addr = context.pc.move_by(self.0 as isize);
         let mut reader = vm.arena.read_from(addr);
         reader.read_i32::<BigEndian>().unwrap()
     }
@@ -27,13 +27,13 @@ impl GetValue for Indirect {
 
 impl SetValue for Indirect {
     fn set_value(&self, value: i32, vm: &mut Machine, context: &Context) {
-        let addr = context.pc + (self.0 as isize % IDX_MOD as isize);
+        let addr = context.pc.move_by(self.0 as isize % IDX_MOD as isize);
         let mut writer = vm.arena.write_to(addr);
         writer.write_i32::<BigEndian>(value).unwrap();
     }
 
     fn set_value_long(&self, value: i32, vm: &mut Machine, context: &Context) {
-        let addr = context.pc + self.0 as isize;
+        let addr = context.pc.move_by(self.0 as isize);
         let mut writer = vm.arena.write_to(addr);
         writer.write_i32::<BigEndian>(value).unwrap();
     }

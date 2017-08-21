@@ -25,73 +25,24 @@ pub struct ArenaIndex(usize);
 
 impl ArenaIndex {
     pub fn from_raw(index: usize) -> Self {
-        unimplemented!();
-        if index >= MEM_SIZE {
-            ArenaIndex(index)
-        } else {
-            ArenaIndex(index % MEM_SIZE)
-        }
+        ArenaIndex::zero().advance_by(index)
     }
 
     pub fn zero() -> Self {
         ArenaIndex(0)
     }
 
-    pub fn raw_index(&self) -> usize {
-        self.0
+    pub fn advance_by(self, value: usize) -> Self {
+        ArenaIndex((self.0 + value) % MEM_SIZE)
     }
-}
 
-impl Add<ArenaIndex> for ArenaIndex {
-    type Output = ArenaIndex;
-
-    fn add(self, ArenaIndex(rhs): ArenaIndex) -> Self {
-        if self.0 + rhs >= MEM_SIZE {
-            ArenaIndex(self.0 + rhs)
+    pub fn move_by(self, value: isize) -> Self {
+        let value = if value < 0 {
+            MEM_SIZE - ((value % MEM_SIZE as isize) as usize)
         } else {
-            ArenaIndex((self.0 + rhs) % MEM_SIZE)
-        }
-    }
-}
-
-impl Add<isize> for ArenaIndex {
-    type Output = ArenaIndex;
-
-    fn add(self, mut rhs: isize) -> Self {
-        if rhs < 0 {
-            rhs = (rhs % MEM_SIZE as isize) + MEM_SIZE as isize;
-        }
-        ArenaIndex(((self.0 as isize + rhs) as usize) % MEM_SIZE)
-    }
-}
-
-impl Add<usize> for ArenaIndex {
-    type Output = ArenaIndex;
-
-    fn add(self, rhs: usize) -> Self {
-        self + ArenaIndex(rhs)
-    }
-}
-
-impl AddAssign for ArenaIndex {
-    fn add_assign(&mut self, ArenaIndex(rhs): ArenaIndex) {
-        if self.0 + rhs >= MEM_SIZE {
-            self.0 += rhs;
-        } else {
-            self.0 = (self.0 + rhs) % MEM_SIZE;
-        }
-    }
-}
-
-impl AddAssign<usize> for ArenaIndex {
-    fn add_assign(&mut self, rhs: usize) {
-        *self += ArenaIndex(rhs);
-    }
-}
-
-impl AddAssign<isize> for ArenaIndex {
-    fn add_assign(&mut self, rhs: isize) {
-        *self = *self + rhs;
+            value as usize
+        };
+        ArenaIndex(value).advance_by(value)
     }
 }
 
