@@ -1,8 +1,9 @@
-use std::io::Read;
+use std::io::{Read, Write};
 use std::convert::TryFrom;
-use byteorder::ReadBytesExt;
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
@@ -23,6 +24,12 @@ impl GetValue for Register {
 impl MemSize for Register {
     fn mem_size(&self) -> usize {
         REG_SIZE
+    }
+}
+
+impl WriteTo for Register {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        let _ = writer.write_u8(self.0);
     }
 }
 

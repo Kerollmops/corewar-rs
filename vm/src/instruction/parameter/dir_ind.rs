@@ -1,7 +1,8 @@
-use std::io::Read;
+use std::io::{Read, Write};
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect, ParamType};
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
@@ -40,6 +41,15 @@ impl MemSize for DirInd {
     }
 }
 
+impl WriteTo for DirInd {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        match *self {
+            DirInd::Direct(direct) => direct.write_to(writer),
+            DirInd::Indirect(indirect) => indirect.write_to(writer),
+        }
+    }
+}
+
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirInd {
     type Error = InvalidParamType;
 
@@ -48,6 +58,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirInd {
             ParamType::Direct => Ok(DirInd::Direct(Direct::from(reader))),
             ParamType::Indirect => Ok(DirInd::Indirect(Indirect::from(reader))),
             _ => Err(InvalidParamType),
+        }
+    }
+}
+
+impl From<DirInd> for Option<ParamType> {
+    fn from(value: DirInd) -> Self {
+        match value {
+            DirInd::Direct(_) => Some(ParamType::Direct),
+            DirInd::Indirect(_) => Some(ParamType::Indirect),
         }
     }
 }

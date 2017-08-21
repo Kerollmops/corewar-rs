@@ -1,7 +1,8 @@
-use std::io::Read;
+use std::io::{Read, Write};
 use std::convert::TryFrom;
 use instruction::parameter::{Indirect, Register, ParamType, InvalidRegister};
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
@@ -43,6 +44,15 @@ impl MemSize for IndReg {
     }
 }
 
+impl WriteTo for IndReg {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        match *self {
+            IndReg::Indirect(indirect) => indirect.write_to(writer),
+            IndReg::Register(register) => register.write_to(writer),
+        }
+    }
+}
+
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for IndReg {
     type Error = InvalidIndReg;
 
@@ -54,6 +64,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for IndReg {
                 Err(InvalidRegister(reg)) => Err(InvalidIndReg::InvalidRegister(reg)),
             },
             _ => Err(InvalidIndReg::InvalidParamType),
+        }
+    }
+}
+
+impl From<IndReg> for Option<ParamType> {
+    fn from(value: IndReg) -> Self {
+        match value {
+            IndReg::Indirect(_) => Some(ParamType::Indirect),
+            IndReg::Register(_) => Some(ParamType::Register),
         }
     }
 }

@@ -1,7 +1,8 @@
-use std::io::Read;
-use byteorder::{BigEndian, ReadBytesExt};
+use std::io::{Read, Write};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::DIR_SIZE;
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
@@ -18,6 +19,12 @@ impl GetValue for Direct {
 impl MemSize for Direct {
     fn mem_size(&self) -> usize {
         DIR_SIZE
+    }
+}
+
+impl WriteTo for Direct {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        let _ = writer.write_i32::<BigEndian>(self.0);
     }
 }
 

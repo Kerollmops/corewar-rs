@@ -1,5 +1,6 @@
-use std::io::Read;
-use byteorder::ReadBytesExt;
+use std::io::{Read, Write};
+use byteorder::{ReadBytesExt, WriteBytesExt};
+use instruction::write_to::WriteTo;
 
 const REG_SIZE: usize = 1;
 const DIR_SIZE: usize = 4;
@@ -46,6 +47,34 @@ pub enum ParamNumber {
 pub struct ParamCode(u8);
 
 impl ParamCode {
+    pub fn null() -> Self {
+        ParamCode(0)
+    }
+
+    pub fn from_types(types: [Option<ParamType>; 4]) -> Self {
+        use self::ParamNumber::*;
+        let mut param_code = ParamCode::null();
+        if let Some(param_type) = types[0] { param_code.set_type(First, param_type) }
+        if let Some(param_type) = types[1] { param_code.set_type(Second, param_type) }
+        if let Some(param_type) = types[2] { param_code.set_type(Third, param_type) }
+        if let Some(param_type) = types[3] { param_code.set_type(Fourth, param_type) }
+        param_code
+    }
+
+    pub fn set_type(&mut self, param: ParamNumber, param_type: ParamType) {
+        let param_type = match param_type {
+            ParamType::Direct => 0b_01,
+            ParamType::Indirect => 0b_10,
+            ParamType::Register => 0b_11,
+        };
+        match param {
+            ParamNumber::First => self.0 |= (param_type << 6),
+            ParamNumber::Second => self.0 |= (param_type << 4),
+            ParamNumber::Third => self.0 |= (param_type << 2),
+            ParamNumber::Fourth => self.0 |= (param_type << 0),
+        }
+    }
+
     pub fn param_type_of(&self, param: ParamNumber) -> Result<ParamType, InvalidParamCode> {
         let param_type = match param {
             ParamNumber::First => (self.0 & 0b11000000) >> 6,
@@ -59,6 +88,12 @@ impl ParamCode {
             0b_11 => Ok(ParamType::Register),
             _ => Err(InvalidParamCode)
         }
+    }
+}
+
+impl WriteTo for ParamCode {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        let _ = writer.write_u8(self.0);
     }
 }
 

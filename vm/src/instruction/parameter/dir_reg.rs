@@ -1,7 +1,8 @@
-use std::io::Read;
+use std::io::{Read, Write};
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, ParamType, InvalidRegister};
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
@@ -36,6 +37,15 @@ impl MemSize for DirReg {
     }
 }
 
+impl WriteTo for DirReg {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        match *self {
+            DirReg::Direct(direct) => direct.write_to(writer),
+            DirReg::Register(register) => register.write_to(writer),
+        }
+    }
+}
+
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirReg {
     type Error = InvalidDirReg;
 
@@ -47,6 +57,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirReg {
                 Err(InvalidRegister(reg)) => Err(InvalidDirReg::InvalidRegister(reg)),
             },
             _ => Err(InvalidDirReg::InvalidParamType),
+        }
+    }
+}
+
+impl From<DirReg> for Option<ParamType> {
+    fn from(value: DirReg) -> Self {
+        match value {
+            DirReg::Direct(_) => Some(ParamType::Direct),
+            DirReg::Register(_) => Some(ParamType::Register),
         }
     }
 }

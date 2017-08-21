@@ -1,7 +1,8 @@
-use std::io::Read;
+use std::io::{Read, Write};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::MemSize;
+use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use instruction::set_value::SetValue;
 use machine::Machine;
@@ -42,6 +43,12 @@ impl SetValue for Indirect {
 impl MemSize for Indirect {
     fn mem_size(&self) -> usize {
         IND_SIZE
+    }
+}
+
+impl WriteTo for Indirect {
+    fn write_to<W: Write>(&self, writer: &mut W) {
+        let _ = writer.write_i16::<BigEndian>(self.0);
     }
 }
 

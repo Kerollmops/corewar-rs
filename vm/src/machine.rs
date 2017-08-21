@@ -37,7 +37,7 @@ impl Machine {
 
     pub fn new_process(&mut self, context: Context) {
         let mut reader = self.arena.read_from(context.pc);
-        let instruction = Instruction::from(&mut reader);
+        let instruction = Instruction::read_from(&mut reader);
         let process = Process {
             context: context,
             remaining_cycles: instruction.cycle_cost(),
