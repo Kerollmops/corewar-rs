@@ -231,15 +231,15 @@ impl<R: Read> From<R> for Instruction {
         match reader.read_u8().unwrap() {
             1 => Live(Direct::from(&mut reader)),
             2 => {
-                let param_code = try_param_type!(First, reader);
-                let dir_ind = try_param!(DirInd, (param_code, &mut reader));
+                let param_type = try_param_type!(First, reader);
+                let dir_ind = try_param!(DirInd, (param_type, &mut reader));
                 let reg = try_param!(Register, &mut reader);
                 Load(dir_ind, reg)
             },
             3 => {
-                let param_code = try_param_type!(Second, reader);
+                let param_type = try_param_type!(Second, reader);
                 let reg = try_param!(Register, &mut reader);
-                let ind_reg = try_param!(IndReg, (param_code, &mut reader));
+                let ind_reg = try_param!(IndReg, (param_type, &mut reader));
                 Store(reg, ind_reg)
             },
             4 => {
@@ -324,7 +324,7 @@ impl<R: Read> From<R> for Instruction {
             },
             15 => Longfork(Direct::from(&mut reader)),
             16 => {
-                let _useless = try_param_type!(First, reader);
+                let _useless_param_code = ParamCode::from(&mut reader);
                 let reg = try_param!(Register, &mut reader);
                 Display(reg)
             },
