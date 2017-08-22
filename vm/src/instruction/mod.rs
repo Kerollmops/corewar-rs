@@ -60,12 +60,6 @@ macro_rules! try_param {
     })
 }
 
-macro_rules! param_code {
-    ($a:expr, $b:expr, $c:expr, $d:expr) => ({
-        ParamCode::from_types($a, $b, $c, $d)
-    })
-}
-
 impl Instruction {
     pub fn read_from<R: Read>(mut reader: R) -> Self {
         match reader.read_u8().unwrap() {

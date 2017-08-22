@@ -24,8 +24,7 @@ pub use self::dir_ind_reg::DirIndReg;
 pub use self::dir_reg::DirReg;
 pub use self::ind_reg::IndReg;
 
-// TODO: rename
-trait ParamTypeOf {
+pub trait ParamTypeOf {
     fn param_type(&self) -> ParamType;
 }
 

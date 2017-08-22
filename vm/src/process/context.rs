@@ -1,7 +1,7 @@
-use std::ops::{Index, IndexMut, AddAssign, Add};
+use std::ops::{Index, IndexMut};
 use instruction::parameter::Register;
 use arena::ArenaIndex;
-use core::{REG_NUMBER, MEM_SIZE};
+use core::REG_NUMBER;
 
 #[derive(Debug)]
 pub struct Context {

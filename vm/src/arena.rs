@@ -1,5 +1,4 @@
 use std::io::{self, Read, Write};
-use std::ops::{Add, AddAssign};
 use core::MEM_SIZE;
 
 pub struct Arena {
