@@ -24,6 +24,11 @@ pub use self::dir_ind_reg::DirIndReg;
 pub use self::dir_reg::DirReg;
 pub use self::ind_reg::IndReg;
 
+// TODO: rename
+trait ParamTypeOf {
+    fn param_type(&self) -> ParamType;
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvalidParamCode;
 
@@ -33,6 +38,16 @@ pub enum ParamType {
     Direct,
     Indirect,
     Register,
+}
+
+impl From<ParamType> for u8 {
+    fn from(param_type: ParamType) -> Self {
+        match param_type {
+            ParamType::Direct => 0b01,
+            ParamType::Indirect => 0b10,
+            ParamType::Register => 0b11,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -51,28 +66,8 @@ impl ParamCode {
         ParamCode(0)
     }
 
-    pub fn from_types(types: [Option<ParamType>; 4]) -> Self {
-        use self::ParamNumber::*;
-        let mut param_code = ParamCode::null();
-        if let Some(param_type) = types[0] { param_code.set_type(First, param_type) }
-        if let Some(param_type) = types[1] { param_code.set_type(Second, param_type) }
-        if let Some(param_type) = types[2] { param_code.set_type(Third, param_type) }
-        if let Some(param_type) = types[3] { param_code.set_type(Fourth, param_type) }
-        param_code
-    }
-
-    pub fn set_type(&mut self, param: ParamNumber, param_type: ParamType) {
-        let param_type = match param_type {
-            ParamType::Direct => 0b_01,
-            ParamType::Indirect => 0b_10,
-            ParamType::Register => 0b_11,
-        };
-        match param {
-            ParamNumber::First => self.0 |= (param_type << 6),
-            ParamNumber::Second => self.0 |= (param_type << 4),
-            ParamNumber::Third => self.0 |= (param_type << 2),
-            ParamNumber::Fourth => self.0 |= (param_type << 0),
-        }
+    pub fn builder() -> ParamCodeBuilder {
+        ParamCodeBuilder(0)
     }
 
     pub fn param_type_of(&self, param: ParamNumber) -> Result<ParamType, InvalidParamCode> {
@@ -83,11 +78,40 @@ impl ParamCode {
             ParamNumber::Fourth => (self.0 & 0b00000011) >> 0,
         };
         match param_type {
-            0b_01 => Ok(ParamType::Direct),
-            0b_10 => Ok(ParamType::Indirect),
-            0b_11 => Ok(ParamType::Register),
+            0b01 => Ok(ParamType::Direct),
+            0b10 => Ok(ParamType::Indirect),
+            0b11 => Ok(ParamType::Register),
             _ => Err(InvalidParamCode)
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ParamCodeBuilder(u8);
+
+impl ParamCodeBuilder {
+    pub fn build(self) -> ParamCode {
+        ParamCode(self.0)
+    }
+
+    pub fn first<P: ParamTypeOf>(self, param: &P) -> Self {
+        let param_type = ParamTypeOf::param_type(param);
+        ParamCodeBuilder((self.0 & 0b00111111) | Into::<u8>::into(param_type) << 6)
+    }
+
+    pub fn second<P: ParamTypeOf>(self, param: &P) -> Self {
+        let param_type = ParamTypeOf::param_type(param);
+        ParamCodeBuilder((self.0 & 0b11001111) | Into::<u8>::into(param_type) << 4)
+    }
+
+    pub fn third<P: ParamTypeOf>(self, param: &P) -> Self {
+        let param_type = ParamTypeOf::param_type(param);
+        ParamCodeBuilder((self.0 & 0b11110011) | Into::<u8>::into(param_type) << 2)
+    }
+
+    pub fn fourth<P: ParamTypeOf>(self, param: &P) -> Self {
+        let param_type = ParamTypeOf::param_type(param);
+        ParamCodeBuilder((self.0 & 0b11111100) | Into::<u8>::into(param_type) << 0)
     }
 }
 
@@ -168,6 +192,33 @@ mod tests {
             let mut param: &[u8] = &[0b00000000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap_err(), InvalidParamCode);
+        }
+    }
+
+    mod builder {
+        use super::*;
+
+        impl ParamTypeOf for ParamType {
+            fn param_type(&self) -> ParamType {
+                match *self {
+                    ParamType::Direct => ParamType::Direct,
+                    ParamType::Indirect => ParamType::Indirect,
+                    ParamType::Register => ParamType::Register,
+                }
+            }
+        }
+
+        #[test]
+        fn first_and_third() {
+            let param = ParamCode::builder().first(&ParamType::Direct).third(&ParamType::Register).build();
+            assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Direct);
+            assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Register);
+        }
+
+        #[test]
+        fn redeclare_first() {
+            let param = ParamCode::builder().first(&ParamType::Register).first(&ParamType::Direct).build();
+            assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Direct);
         }
     }
 }

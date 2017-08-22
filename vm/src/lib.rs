@@ -1,4 +1,5 @@
 #![feature(try_from)]
+#![feature(concat_idents)]
 
 extern crate byteorder;
 extern crate core;

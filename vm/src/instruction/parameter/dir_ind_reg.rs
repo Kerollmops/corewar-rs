@@ -1,6 +1,7 @@
 use std::io::{Read, Write};
 use std::convert::TryFrom;
-use instruction::parameter::{Direct, Indirect, ParamType};
+use instruction::parameter::{Direct, Indirect};
+use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::{Register, InvalidRegister};
 use instruction::mem_size::MemSize;
 use instruction::write_to::WriteTo;
@@ -43,6 +44,16 @@ impl MemSize for DirIndReg {
     }
 }
 
+impl ParamTypeOf for DirIndReg {
+    fn param_type(&self) -> ParamType {
+        match *self {
+            DirIndReg::Direct(_) => ParamType::Direct,
+            DirIndReg::Indirect(_) => ParamType::Indirect,
+            DirIndReg::Register(_) => ParamType::Register,
+        }
+    }
+}
+
 impl WriteTo for DirIndReg {
     fn write_to<W: Write>(&self, writer: &mut W) {
         match *self {
@@ -61,16 +72,6 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirIndReg {
             ParamType::Direct => Ok(DirIndReg::Direct(Direct::from(reader))),
             ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::from(reader))),
             ParamType::Register => Ok(DirIndReg::Register(Register::try_from(reader)?)),
-        }
-    }
-}
-
-impl From<DirIndReg> for Option<ParamType> {
-    fn from(value: DirIndReg) -> Self {
-        match value {
-            DirIndReg::Direct(_) => Some(ParamType::Direct),
-            DirIndReg::Indirect(_) => Some(ParamType::Indirect),
-            DirIndReg::Register(_) => Some(ParamType::Register),
         }
     }
 }
