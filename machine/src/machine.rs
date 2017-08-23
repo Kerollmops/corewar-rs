@@ -20,7 +20,7 @@ impl Machine {
         let mut arena = Arena::new();
         let mut arena_index = ArenaIndex::zero();
         let mut processes = Vec::with_capacity(champions.len());
-        let step = MEM_SIZE / champions.len();
+        let step = MEM_SIZE.checked_div(champions.len()).unwrap_or(0);
 
         for (id, &Champion{ ref program, .. }) in champions.iter() {
             {

@@ -1,5 +1,4 @@
-use std::path::Path;
-use std::io;
+use std::io::{self, Read};
 use program::{Program, InvalidProgram};
 
 // FIXME: impl Error trait
@@ -19,7 +18,7 @@ pub struct Champion {
 }
 
 impl Champion {
-    pub fn new<P: AsRef<Path>>(id: i32, path: P) -> Result<Self, InvalidChampion> {
+    pub fn new<R: Read>(id: i32, reader: &mut R) -> Result<Self, InvalidChampion> {
         unimplemented!()
     }
 }

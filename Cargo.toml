@@ -1,2 +1,2 @@
 [workspace]
-members = ["./asm", "./vm", "./core"]
+members = ["./asm", "./machine", "./core"]

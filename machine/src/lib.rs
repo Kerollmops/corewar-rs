@@ -4,14 +4,12 @@
 extern crate byteorder;
 extern crate core;
 
-mod machine;
-mod champion;
-mod arena;
+pub mod machine;
+pub mod champion;
+pub mod arena;
 mod process;
 mod program;
 mod instruction;
-
-pub use machine::Machine;
 
 // let mut file = File::open(&champion.program_path)?;
 // if file.metadata()?.len() > CHAMP_MAX_SIZE as u64 {

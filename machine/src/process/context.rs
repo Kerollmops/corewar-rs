@@ -23,10 +23,10 @@ impl Context {
 
     pub fn clean_fork(&self) -> Context {
         Context {
-            pc: self.pc.clone(),
+            pc: self.pc,
             carry: self.carry,
             cycle_since_last_live: 0,
-            registers: self.registers.clone()
+            registers: self.registers.clone(),
         }
     }
 }
