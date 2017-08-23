@@ -298,9 +298,9 @@ impl Instruction {
     pub fn execute<W: Write>(&self, vm: &mut Machine, context: &mut Context, output: &mut W) {
         match *self {
             NoOp => context.pc = context.pc.advance_by(self.mem_size()),
-            Live(player_id) => {
+            Live(champion_id) => {
                 context.cycle_since_last_live = 0;
-                let player = vm.set_last_living_player(player_id.into());
+                let champion = vm.set_last_living_champion(champion_id.into());
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Load(dir_ind, reg) => {

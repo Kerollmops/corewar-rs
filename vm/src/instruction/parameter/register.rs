@@ -15,6 +15,12 @@ pub struct InvalidRegister(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Register(u8);
 
+impl Register {
+    pub unsafe fn from_raw(reg: u8) -> Self {
+        Register(reg)
+    }
+}
+
 impl GetValue for Register {
     fn get_value(&self, _vm: &Machine, context: &Context) -> i32 {
         context.registers[*self]

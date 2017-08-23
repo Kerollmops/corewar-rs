@@ -12,6 +12,15 @@ pub struct Context {
 }
 
 impl Context {
+    pub fn new(pc: ArenaIndex) -> Self {
+        Context {
+            pc: pc,
+            carry: false,
+            cycle_since_last_live: 0,
+            registers: Registers::new(),
+        }
+    }
+
     pub fn clean_fork(&self) -> Context {
         Context {
             pc: self.pc.clone(),
@@ -25,6 +34,12 @@ impl Context {
 #[derive(Debug, Clone)]
 pub struct Registers {
     inner: [i32; REG_NUMBER]
+}
+
+impl Registers {
+    pub fn new() -> Self {
+        Registers { inner: [0; REG_NUMBER] }
+    }
 }
 
 impl Index<Register> for Registers {
