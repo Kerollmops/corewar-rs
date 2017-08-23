@@ -15,12 +15,6 @@ pub struct InvalidRegister(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Register(u8);
 
-impl Register {
-    pub unsafe fn from_raw(reg: u8) -> Self {
-        Register(reg)
-    }
-}
-
 impl GetValue for Register {
     fn get_value(&self, _vm: &Machine, context: &Context) -> i32 {
         context.registers[*self]
@@ -44,6 +38,17 @@ impl<'a, R: Read> TryFrom<&'a mut R> for Register {
 
     fn try_from(reader: &'a mut R) -> Result<Self, InvalidRegister> {
         match reader.read_u8().unwrap() {
+            value @ 1...REG_MAX => Ok(Register(value)),
+            value => Err(InvalidRegister(value)),
+        }
+    }
+}
+
+impl TryFrom<u8> for Register {
+    type Error = InvalidRegister;
+
+    fn try_from(value: u8) -> Result<Self, InvalidRegister> {
+        match value {
             value @ 1...REG_MAX => Ok(Register(value)),
             value => Err(InvalidRegister(value)),
         }

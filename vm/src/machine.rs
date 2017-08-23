@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::io;
 use process::{Process, Context};
 use instruction::Instruction;
@@ -25,10 +26,11 @@ impl Machine {
         for (id, &Champion{ ref program, .. }) in champions.iter() {
             let mut writer = arena.write_to(arena_index);
             io::copy(&mut program.as_slice(), &mut writer)?;
+
             let instr = Instruction::read_from(&mut program.as_slice());
 
             let mut context = Context::new(arena_index);
-            let reg = unsafe { Register::from_raw(1) };
+            let reg = Register::try_from(1).unwrap();
             context.registers[reg] = *id;
 
             processes.push(Process {
@@ -36,6 +38,7 @@ impl Machine {
                 remaining_cycles: instr.cycle_cost(),
                 instruction: instr,
             });
+
             arena_index = arena_index.advance_by(step);
         }
 
