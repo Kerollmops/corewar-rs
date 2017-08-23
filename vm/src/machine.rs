@@ -48,14 +48,10 @@ impl Machine {
         })
     }
 
-    pub fn set_last_living_champion(&mut self, champion_id: i32) -> Option<&Champion> {
-        match self.champions.get(&champion_id) {
-            Some(champion) => {
-                self.last_living_champion = Some(champion_id);
-                self.number_of_lives += 1;
-                Some(champion)
-            },
-            None => None,
+    pub fn live_champion(&mut self, champion_id: i32) {
+        if let Some(champion) = self.champions.get(&champion_id) {
+            self.last_living_champion = Some(champion_id);
+            self.number_of_lives += 1;
         }
     }
 
