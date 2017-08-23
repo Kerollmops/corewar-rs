@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::io;
 use process::{Process, Context};
-use instruction::Instruction;
 use instruction::parameter::Register;
 use champion::Champion;
 use arena::{Arena, ArenaIndex};
@@ -24,20 +23,16 @@ impl Machine {
         let step = MEM_SIZE / champions.len();
 
         for (id, &Champion{ ref program, .. }) in champions.iter() {
-            let mut writer = arena.write_to(arena_index);
-            io::copy(&mut program.as_slice(), &mut writer)?;
-
-            let instr = Instruction::read_from(&mut program.as_slice());
+            {
+                let mut writer = arena.write_to(arena_index);
+                io::copy(&mut program.as_slice(), &mut writer)?;
+            }
 
             let mut context = Context::new(arena_index);
             let reg = Register::try_from(1).unwrap();
             context.registers[reg] = *id;
 
-            processes.push(Process {
-                context: context,
-                remaining_cycles: instr.cycle_cost(),
-                instruction: instr,
-            });
+            processes.push(Process::new(context, &arena));
 
             arena_index = arena_index.advance_by(step);
         }
@@ -52,20 +47,13 @@ impl Machine {
     }
 
     pub fn live_champion(&mut self, champion_id: i32) {
-        if let Some(champion) = self.champions.get(&champion_id) {
+        if self.champions.get(&champion_id).is_some() {
             self.last_living_champion = Some(champion_id);
             self.number_of_lives += 1;
         }
     }
 
     pub fn new_process(&mut self, context: Context) {
-        let mut reader = self.arena.read_from(context.pc);
-        let instruction = Instruction::read_from(&mut reader);
-        let process = Process {
-            context: context,
-            remaining_cycles: instruction.cycle_cost(),
-            instruction: instruction,
-        };
-        self.processes.push(process);
+        self.processes.push(Process::new(context, &self.arena))
     }
 }
