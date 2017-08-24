@@ -1,7 +1,7 @@
 use std::io::{self, Read, Error, ErrorKind};
 use byteorder::{ReadBytesExt, BigEndian};
 use core::{COREWAR_EXEC_MAGIC, PROG_NAME_LENGTH, COMMENT_LENGTH};
-use program::{Program, InvalidProgram};
+use program::Program;
 
 #[derive(Debug)]
 pub struct Champion {

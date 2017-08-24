@@ -1,5 +1,5 @@
 use std::io::{self, Read, Write};
-use std::mem;
+use std::fmt;
 use core::MEM_SIZE;
 
 pub struct Arena {
@@ -24,13 +24,13 @@ impl Arena {
     }
 }
 
-impl Clone for Arena {
-    fn clone(&self) -> Self {
-        let mut memory = [0; MEM_SIZE];
-        for (a, b) in self.memory.iter().zip(memory.iter_mut()) {
-            *b = *a;
+impl fmt::Debug for Arena {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for line in self.memory.chunks(32) {
+            for x in line { write!(f, "{:0<2x} ", x)? }
+            writeln!(f)?
         }
-        Arena { memory }
+        Ok(())
     }
 }
 

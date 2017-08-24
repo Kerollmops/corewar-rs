@@ -70,7 +70,7 @@ pub struct CycleExecute<'a, W: 'a + Write> {
 }
 
 impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
-    type Item = Arena;
+    type Item = ();
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut processes = Vec::new();
@@ -91,6 +91,6 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
             }
         }
         self.machine.processes.append(&mut processes);
-        Some(self.machine.arena.clone())
+        Some(())
     }
 }
