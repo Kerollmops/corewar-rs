@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use std::mem;
 use core::MEM_SIZE;
 
 pub struct Arena {
@@ -20,6 +21,16 @@ impl Arena {
 
     pub fn as_slice(&self) -> &[u8] {
         &self.memory
+    }
+}
+
+impl Clone for Arena {
+    fn clone(&self) -> Self {
+        let mut memory = [0; MEM_SIZE];
+        for (a, b) in self.memory.iter().zip(memory.iter_mut()) {
+            *b = *a;
+        }
+        Arena { memory }
     }
 }
 

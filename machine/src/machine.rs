@@ -4,6 +4,7 @@ use std::io::{self, Write};
 use std::mem;
 use process::{Process, Context};
 use instruction::parameter::Register;
+use instruction::Instruction;
 use champion::Champion;
 use arena::{Arena, ArenaIndex};
 use core::MEM_SIZE;
@@ -69,19 +70,27 @@ pub struct CycleExecute<'a, W: 'a + Write> {
 }
 
 impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
-    type Item = ();
+    type Item = Arena;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut processes = Vec::new();
         mem::swap(&mut processes, &mut self.machine.processes);
-        for mut process in &mut processes {
+
+        for process in &mut processes {
             process.remaining_cycles -= 1;
+
             if process.remaining_cycles == 0 {
-                let instr = process.instruction;
-                instr.execute(&mut self.machine, &mut process.context, &mut self.output);
+                let ref mut ctx = process.context;
+                let ref mut instr = process.instruction;
+
+                instr.execute(&mut self.machine, ctx, &mut self.output);
+
+                let reader = self.machine.arena.read_from(ctx.pc);
+                *instr = Instruction::read_from(reader);
+                process.remaining_cycles = instr.cycle_cost();
             }
         }
         self.machine.processes.append(&mut processes);
-        Some(())
+        Some(self.machine.arena.clone())
     }
 }

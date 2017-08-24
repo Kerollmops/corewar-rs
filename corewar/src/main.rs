@@ -17,17 +17,9 @@ fn failable_main() -> io::Result<()> {
     let mut stdout = io::stdout();
     let mut machine = Machine::new(champions?);
 
-    for cycle in machine.cycle_execute(&mut stdout).take(10_000) {
-        unimplemented!();
+    for arena in machine.cycle_execute(&mut stdout).take(1_000_000) {
+        // println!("New cycle");
     }
-
-    // if file.metadata()?.len() > CHAMP_MAX_SIZE as u64 {
-    //     return Err(io::Error::new(io::ErrorKind::Other, "champion size is too big"))
-    // }
-    // let mut content = Vec::new();
-    // file.read_to_end(&mut content)?;
-
-    // let mut cursor = io::Cursor::new(content);
 
     Ok(())
 }
