@@ -17,6 +17,10 @@ impl Arena {
     pub fn write_to(&mut self, ArenaIndex(index): ArenaIndex) -> ArenaWriter {
         ArenaWriter { index, arena: self }
     }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.memory
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

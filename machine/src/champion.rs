@@ -1,5 +1,5 @@
 use std::io::{self, Read, Error, ErrorKind};
-use byteorder::{ReadBytesExt, LittleEndian};
+use byteorder::{ReadBytesExt, BigEndian};
 use core::{COREWAR_EXEC_MAGIC, PROG_NAME_LENGTH, COMMENT_LENGTH};
 use program::{Program, InvalidProgram};
 
@@ -13,7 +13,7 @@ pub struct Champion {
 
 impl Champion {
     pub fn new<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let magic = reader.read_u32::<LittleEndian>()?;
+        let magic = reader.read_u32::<BigEndian>()?;
         if magic != COREWAR_EXEC_MAGIC {
             return Err(Error::new(ErrorKind::InvalidData, "invalid magic number"))
         }
@@ -25,7 +25,7 @@ impl Champion {
             &program_name[..first_nul]
         };
 
-        let program_size = reader.read_u32::<LittleEndian>()? as usize;
+        let program_size = reader.read_u32::<BigEndian>()? as usize;
 
         let mut comment = [0; COMMENT_LENGTH + 1];
         let comment = {

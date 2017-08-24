@@ -295,16 +295,16 @@ impl Instruction {
         }
     }
 
-    pub fn execute<W: Write>(&self, vm: &mut Machine, context: &mut Context, output: &mut W) {
+    pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) {
         match *self {
             NoOp => context.pc = context.pc.advance_by(self.mem_size()),
             Live(champion_id) => {
                 context.cycle_since_last_live = 0;
-                vm.live_champion(champion_id.into());
+                machine.live_champion(champion_id.into());
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Load(dir_ind, reg) => {
-                let value = dir_ind.get_value(vm, context);
+                let value = dir_ind.get_value(machine, context);
                 context.registers[reg] = value;
                 context.carry = { value == 0 };
                 context.pc = context.pc.advance_by(self.mem_size());
@@ -312,7 +312,7 @@ impl Instruction {
             Store(reg, ind_reg) => {
                 let value = context.registers[reg];
                 match ind_reg {
-                    IndReg::Indirect(ind) => ind.set_value(value, vm, context),
+                    IndReg::Indirect(ind) => ind.set_value(value, machine, context),
                     IndReg::Register(reg) => context.registers[reg] = value,
                 }
                 context.pc = context.pc.advance_by(self.mem_size());
@@ -334,24 +334,24 @@ impl Instruction {
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let val_a = dir_ind_reg_a.get_value(vm, context);
-                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let val_a = dir_ind_reg_a.get_value(machine, context);
+                let val_b = dir_ind_reg_b.get_value(machine, context);
                 let result = val_a & val_b;
                 context.registers[reg] = result;
                 context.carry = { result == 0 };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let val_a = dir_ind_reg_a.get_value(vm, context);
-                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let val_a = dir_ind_reg_a.get_value(machine, context);
+                let val_b = dir_ind_reg_b.get_value(machine, context);
                 let result = val_a | val_b;
                 context.registers[reg] = result;
                 context.carry = { result == 0 };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let val_a = dir_ind_reg_a.get_value(vm, context);
-                let val_b = dir_ind_reg_b.get_value(vm, context);
+                let val_a = dir_ind_reg_a.get_value(machine, context);
+                let val_b = dir_ind_reg_b.get_value(machine, context);
                 let result = val_a ^ val_b;
                 context.registers[reg] = result;
                 context.carry = { result == 0 };
@@ -364,38 +364,38 @@ impl Instruction {
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
-                let val_a = dir_ind_reg.get_value(vm, context);
-                let val_b = dir_reg.get_value(vm, context);
+                let val_a = dir_ind_reg.get_value(machine, context);
+                let val_b = dir_reg.get_value(machine, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                context.registers[reg] = addr.get_value(vm, context);
+                context.registers[reg] = addr.get_value(machine, context);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
                 let value = context.registers[reg];
-                let val_a = dir_ind_reg.get_value(vm, context);
-                let val_b = dir_reg.get_value(vm, context);
+                let val_a = dir_ind_reg.get_value(machine, context);
+                let val_b = dir_reg.get_value(machine, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                addr.set_value(value, vm, context);
+                addr.set_value(value, machine, context);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Fork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc = fork.pc.move_by(value as isize % IDX_MOD as isize);
-                vm.new_process(fork);
+                machine.new_process(fork);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             LongLoad(dir_ind, reg) => {
-                let value = dir_ind.get_value_long(vm, context);
+                let value = dir_ind.get_value_long(machine, context);
                 context.registers[reg] = value;
                 context.carry = true; // ???
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
-                let val_a = dir_ind_reg.get_value_long(vm, context);
-                let val_b = dir_reg.get_value_long(vm, context);
+                let val_a = dir_ind_reg.get_value_long(machine, context);
+                let val_b = dir_reg.get_value_long(machine, context);
                 let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
-                context.registers[reg] = addr.get_value_long(vm, context);
+                context.registers[reg] = addr.get_value_long(machine, context);
                 context.carry = { context.pc != ArenaIndex::zero() };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
@@ -403,7 +403,7 @@ impl Instruction {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc = fork.pc.move_by(value as isize);
-                vm.new_process(fork);
+                machine.new_process(fork);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Display(reg) => {

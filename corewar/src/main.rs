@@ -14,9 +14,12 @@ fn failable_main() -> io::Result<()> {
             Ok((id as i32, Champion::new(&mut file)?))
         }).collect();
 
-    let machine = Machine::new(champions?);
+    let mut stdout = io::stdout();
+    let mut machine = Machine::new(champions?);
 
-    //
+    for cycle in machine.cycle_execute(&mut stdout).take(10_000) {
+        unimplemented!();
+    }
 
     // if file.metadata()?.len() > CHAMP_MAX_SIZE as u64 {
     //     return Err(io::Error::new(io::ErrorKind::Other, "champion size is too big"))

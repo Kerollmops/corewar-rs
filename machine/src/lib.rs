@@ -2,6 +2,7 @@
 #![feature(concat_idents)]
 
 extern crate byteorder;
+#[macro_use] extern crate log;
 extern crate core;
 
 mod machine;
@@ -11,7 +12,7 @@ pub mod arena;
 mod process;
 mod instruction;
 
-pub use machine::Machine;
+pub use machine::{Machine, CycleExecute};
 
 // #[cfg(test)]
 // mod tests {
