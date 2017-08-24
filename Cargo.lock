@@ -19,5 +19,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "core"
 version = "0.1.0"
 
+[[package]]
+name = "corewar"
+version = "0.1.0"
+dependencies = [
+ "core 0.1.0",
+ "machine 0.1.0",
+]
+
 [metadata]
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"

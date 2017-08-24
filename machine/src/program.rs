@@ -1,9 +1,23 @@
-use core::PROG_MAX_SIZE;
+use std::io::{self, Read};
+use std::fmt;
+use std::error::Error;
+use core::CHAMP_MAX_SIZE;
 
-// FIXME: impl Error trait
 #[derive(Debug)]
 pub enum InvalidProgram {
     TooLong,
+}
+
+impl Error for InvalidProgram {
+    fn description(&self) -> &str {
+        "program size is too long"
+    }
+}
+
+impl fmt::Display for InvalidProgram {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.description())
+    }
 }
 
 #[derive(Debug)]
@@ -12,11 +26,16 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn from_slice(slice: &[u8]) -> Result<Self, InvalidProgram> {
-        if slice.len() > PROG_MAX_SIZE {
-            return Err(InvalidProgram::TooLong)
+    pub fn new<R: Read>(program_size: usize, reader: &mut R) -> io::Result<Self> {
+        if program_size > CHAMP_MAX_SIZE {
+            use self::InvalidProgram::TooLong;
+            return Err(io::Error::new(io::ErrorKind::InvalidData, TooLong))
         }
-        Ok(Program { inner: slice.to_owned() })
+
+        let mut program = vec![0; program_size];
+        reader.read_exact(&mut program)?;
+
+        Ok(Program { inner: program })
     }
 
     pub fn as_slice(&self) -> &[u8] {

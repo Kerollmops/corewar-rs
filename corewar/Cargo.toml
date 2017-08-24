@@ -1,0 +1,8 @@
+[package]
+name = "corewar"
+version = "0.1.0"
+authors = ["Kerollmops <renault.cle@gmail.com>"]
+
+[dependencies]
+core = { path = "../core" }
+machine = { path = "../machine" }
