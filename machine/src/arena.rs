@@ -52,7 +52,7 @@ impl ArenaIndex {
 
     pub fn move_by(self, value: isize) -> Self {
         let value = if value < 0 {
-            MEM_SIZE - ((value % MEM_SIZE as isize) as usize)
+            ((value % MEM_SIZE as isize) + MEM_SIZE as isize) as usize
         } else {
             value as usize
         };

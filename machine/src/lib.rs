@@ -1,5 +1,6 @@
 #![feature(try_from)]
 #![feature(concat_idents)]
+#![feature(const_fn)]
 
 extern crate byteorder;
 #[macro_use] extern crate log;

@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
@@ -11,7 +12,7 @@ use process::Context;
 #[derive(Debug, Clone, Copy)]
 pub struct InvalidParamType;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirInd {
     Direct(Direct),
     Indirect(Indirect),
@@ -68,6 +69,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirInd {
             ParamType::Direct => Ok(DirInd::Direct(Direct::from(reader))),
             ParamType::Indirect => Ok(DirInd::Indirect(Indirect::from(reader))),
             _ => Err(InvalidParamType),
+        }
+    }
+}
+
+impl fmt::Debug for DirInd {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirInd::Direct(direct) => write!(f, "{:?}", direct),
+            DirInd::Indirect(indirect) => write!(f, "{:?}", indirect),
         }
     }
 }

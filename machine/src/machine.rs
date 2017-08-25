@@ -7,14 +7,18 @@ use instruction::parameter::Register;
 use instruction::Instruction;
 use champion::Champion;
 use arena::{Arena, ArenaIndex};
-use core::MEM_SIZE;
+use core::{MEM_SIZE, CYCLE_TO_DIE, CYCLE_DELTA, NBR_LIVE, MAX_CHECKS};
 
 pub struct Machine {
     pub arena: Arena,
     champions: BTreeMap<i32, Champion>,
     processes: Vec<Process>,
     last_living_champion: Option<i32>,
+
     number_of_lives: usize,
+    cycles_to_die: usize,
+    cycles: usize,
+    cycle_checks: usize,
 }
 
 impl Machine {
@@ -45,6 +49,9 @@ impl Machine {
             processes: processes,
             last_living_champion: None,
             number_of_lives: 0,
+            cycles_to_die: CYCLE_TO_DIE,
+            cycles: 0,
+            cycle_checks: 0,
         }
     }
 
@@ -76,14 +83,33 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         let mut processes = Vec::new();
         mem::swap(&mut processes, &mut self.machine.processes);
 
+        self.machine.cycles += 1;
+        if self.machine.cycles >= self.machine.cycles_to_die {
+            self.machine.cycle_checks += 1;
+            processes.retain(|p| p.context.cycle_since_last_live < self.machine.cycles_to_die);
+            if self.machine.number_of_lives >= NBR_LIVE || self.machine.cycle_checks >= MAX_CHECKS {
+                self.machine.cycles_to_die -= CYCLE_DELTA;
+                self.machine.cycle_checks = 0;
+            }
+            self.machine.cycles = 0;
+            self.machine.number_of_lives = 0;
+        }
+
         for process in &mut processes {
+            let ref mut ctx = process.context;
             process.remaining_cycles -= 1;
+            ctx.cycle_since_last_live += 1;
 
             if process.remaining_cycles == 0 {
-                let ref mut ctx = process.context;
                 let ref mut instr = process.instruction;
 
+                let bef = ctx.pc; // TODO: remove
+
                 instr.execute(&mut self.machine, ctx, &mut self.output);
+
+                let aft = ctx.pc; // TODO: remove
+
+                trace!("execute {:?}; ({:?}) -> ({:?})", instr, bef, aft);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
                 *instr = Instruction::read_from(reader);

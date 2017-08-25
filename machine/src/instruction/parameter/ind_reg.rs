@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Indirect, Register, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
@@ -14,7 +15,7 @@ pub enum InvalidIndReg {
     InvalidRegister(u8),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IndReg {
     Indirect(Indirect),
     Register(Register),
@@ -74,6 +75,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for IndReg {
                 Err(InvalidRegister(reg)) => Err(InvalidIndReg::InvalidRegister(reg)),
             },
             _ => Err(InvalidIndReg::InvalidParamType),
+        }
+    }
+}
+
+impl fmt::Debug for IndReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            IndReg::Indirect(indirect) => write!(f, "{:?}", indirect),
+            IndReg::Register(register) => write!(f, "{:?}", register),
         }
     }
 }

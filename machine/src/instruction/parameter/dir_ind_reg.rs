@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
@@ -9,7 +10,7 @@ use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirIndReg {
     Direct(Direct),
     Indirect(Indirect),
@@ -72,6 +73,16 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirIndReg {
             ParamType::Direct => Ok(DirIndReg::Direct(Direct::from(reader))),
             ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::from(reader))),
             ParamType::Register => Ok(DirIndReg::Register(Register::try_from(reader)?)),
+        }
+    }
+}
+
+impl fmt::Debug for DirIndReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirIndReg::Direct(direct) => write!(f, "{:?}", direct),
+            DirIndReg::Indirect(indirect) => write!(f, "{:?}", indirect),
+            DirIndReg::Register(register) => write!(f, "{:?}", register),
         }
     }
 }

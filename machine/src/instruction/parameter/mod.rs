@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::fmt;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::write_to::WriteTo;
 
@@ -42,8 +43,8 @@ pub enum ParamType {
 impl From<ParamType> for u8 {
     fn from(param_type: ParamType) -> Self {
         match param_type {
-            ParamType::Direct => 0b01,
-            ParamType::Indirect => 0b10,
+            ParamType::Direct => 0b10,
+            ParamType::Indirect => 0b01,
             ParamType::Register => 0b11,
         }
     }
@@ -57,8 +58,14 @@ pub enum ParamNumber {
     Fourth,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ParamCode(u8);
+
+impl fmt::Debug for ParamCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:0<8o}", self.0)
+    }
+}
 
 impl ParamCode {
     pub fn null() -> Self {
@@ -77,8 +84,8 @@ impl ParamCode {
             ParamNumber::Fourth => (self.0 & 0b00000011) >> 0,
         };
         match param_type {
-            0b01 => Ok(ParamType::Direct),
-            0b10 => Ok(ParamType::Indirect),
+            0b10 => Ok(ParamType::Direct),
+            0b01 => Ok(ParamType::Indirect),
             0b11 => Ok(ParamType::Register),
             _ => Err(InvalidParamCode)
         }
@@ -135,14 +142,14 @@ mod tests {
 
         #[test]
         fn is_direct() {
-            let mut param: &[u8] = &[0b01000000];
+            let mut param: &[u8] = &[0b10000000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Direct);
         }
 
         #[test]
         fn is_indirect() {
-            let mut param: &[u8] = &[0b10000000];
+            let mut param: &[u8] = &[0b01000000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Indirect);
         }
@@ -167,14 +174,14 @@ mod tests {
 
         #[test]
         fn is_direct() {
-            let mut param: &[u8] = &[0b00000100];
+            let mut param: &[u8] = &[0b00001000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Direct);
         }
 
         #[test]
         fn is_indirect() {
-            let mut param: &[u8] = &[0b00001000];
+            let mut param: &[u8] = &[0b00000100];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Indirect);
         }

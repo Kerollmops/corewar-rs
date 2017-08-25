@@ -1,3 +1,4 @@
+extern crate env_logger;
 extern crate core;
 extern crate machine;
 
@@ -17,16 +18,18 @@ fn failable_main() -> io::Result<()> {
     let mut stdout = io::stdout();
     let mut machine = Machine::new(champions?);
 
-    for _ in machine.cycle_execute(&mut stdout).take(10_000) {
+    for _ in machine.cycle_execute(&mut stdout).take(1000) {
         // println!("New cycle");
     }
 
-    println!("{:?}", machine.arena);
+    // println!("{:?}", machine.arena);
 
     Ok(())
 }
 
 fn main() {
+    let _ = env_logger::init();
+
     if let Err(err) = failable_main() {
         eprintln!("{}", err)
     }

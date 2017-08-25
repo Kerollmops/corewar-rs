@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
@@ -14,7 +15,7 @@ pub enum InvalidDirReg {
     InvalidRegister(u8),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirReg {
     Direct(Direct),
     Register(Register),
@@ -67,6 +68,15 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirReg {
                 Err(InvalidRegister(reg)) => Err(InvalidDirReg::InvalidRegister(reg)),
             },
             _ => Err(InvalidDirReg::InvalidParamType),
+        }
+    }
+}
+
+impl fmt::Debug for DirReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirReg::Direct(direct) => write!(f, "{:?}", direct),
+            DirReg::Register(register) => write!(f, "{:?}", register),
         }
     }
 }

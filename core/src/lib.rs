@@ -6,7 +6,8 @@ pub const MAX_ARGS_NUMBER: usize = 4;
 pub const MAX_PLAYERS:     usize = 4;
 pub const MEM_SIZE:        usize = 4 * 1024;
 pub const IDX_MOD:         usize = MEM_SIZE / 8;
-pub const CHAMP_MAX_SIZE:  usize = MEM_SIZE / 6;
+#[deprecated(note="change this to MEM_SIZE / 6")]
+pub const CHAMP_MAX_SIZE:  usize = MEM_SIZE / 4;
 
 pub const COMMENT_CHAR:    char = '#';
 pub const LABEL_CHAR:      char = ':';
@@ -28,12 +29,12 @@ pub const MAX_CHECKS:   usize = 10;
 
 pub const PROG_NAME_LENGTH:     usize = 128;
 pub const COMMENT_LENGTH:       usize = 2048;
-pub const COREWAR_EXEC_MAGIC:   u32 = 0xea83f3;
+pub const COREWAR_EXEC_MAGIC:     u32 = 0xea83f3;
 
 #[repr(C)]
 pub struct Header {
-    magic: u32,
-    prog_name: [u8; PROG_NAME_LENGTH + 1],
-    prog_size: u32,
-    comment: [u8; COMMENT_LENGTH + 1],
+    pub magic: u32,
+    pub prog_name: [u8; PROG_NAME_LENGTH + 1],
+    pub prog_size: u32,
+    pub comment: [u8; COMMENT_LENGTH + 1],
 }
