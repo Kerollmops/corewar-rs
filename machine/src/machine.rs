@@ -103,13 +103,14 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
             if process.remaining_cycles == 0 {
                 let ref mut instr = process.instruction;
 
-                let bef = ctx.pc; // TODO: remove
+                let from = ctx.pc; // TODO: remove
 
                 instr.execute(&mut self.machine, ctx, &mut self.output);
 
-                let aft = ctx.pc; // TODO: remove
+                let to = ctx.pc; // TODO: remove
 
-                trace!("execute {:?}; ({:?}) -> ({:?})", instr, bef, aft);
+                trace!("execute {:?}", instr);
+                trace!("move from {:?} to {:?}", from, to);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
                 *instr = Instruction::read_from(reader);

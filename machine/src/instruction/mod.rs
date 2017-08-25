@@ -168,7 +168,10 @@ impl Instruction {
                 let reg = try_param!(Register, &mut reader);
                 Display(reg)
             },
-            _ => NoOp,
+            code => {
+                trace!("invalid code({}) gives a NoOp", code);
+                NoOp
+            },
         }
     }
 

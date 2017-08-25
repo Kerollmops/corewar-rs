@@ -11,11 +11,6 @@ pub struct Champion {
     _private: (),
 }
 
-fn into_str_nul_trimmed(slice: &[u8]) -> &str {
-    let name = unsafe { str::from_utf8_unchecked(&slice) };
-    name.trim_right_matches(|c| c as u8 == 0)
-}
-
 impl Champion {
     pub fn new<R: Read>(reader: &mut R) -> io::Result<Self> {
         let header: Header = unsafe {
@@ -28,10 +23,15 @@ impl Champion {
             return Err(Error::new(ErrorKind::InvalidData, "invalid magic number"))
         }
 
+        fn into_str_nul_trimmed(slice: &[u8]) -> &str {
+            let name = unsafe { str::from_utf8_unchecked(&slice) };
+            name.trim_right_matches(|c| c == '\0')
+        }
+
         let name = into_str_nul_trimmed(&header.prog_name);
         let comment = into_str_nul_trimmed(&header.comment);
 
-        info!("champion \"{}\": {} loaded", name, comment);
+        info!("champion \"{}\": \"{}\" loaded", name, comment);
 
         Ok(Champion {
             name: name.to_string(),
