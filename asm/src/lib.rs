@@ -27,11 +27,21 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
 
         // A pair can be converted to an iterator of the tokens which make it up:
         for inner_pair in pair.into_inner() {
-            // match inner_pair.as_rule() {
-            //     Rule::alpha => println!("Letter:  {}", inner_pair.into_span().as_str()),
-            //     Rule::digit => println!("Digit:   {}", inner_pair.into_span().as_str()),
-            //     _ => unreachable!()
-            // };
+            match inner_pair.as_rule() {
+                Rule::prog_header => println!("Prog Header: {}", inner_pair.into_span().as_str()),
+                Rule::identifier => for inner_pair in inner_pair.into_inner() {
+                    match inner_pair.as_rule() {
+                        Rule::label_decl => println!("Label: {}", inner_pair.into_span().as_str()),
+                        Rule::instr => for inner_pair in inner_pair.into_inner() {
+                            match inner_pair.as_rule() {
+                                r => println!("{:?}: {}", r, inner_pair.into_span().as_str()),
+                            }
+                        },
+                        _ => unreachable!()
+                    }
+                },
+                _ => unreachable!()
+            };
         }
     }
     Ok(())

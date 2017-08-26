@@ -1,15 +1,16 @@
 // ugly comments everywhere
 asm = { soi ~ comment* ~ (prog_header) ~ (comment | identifier)* ~ eoi }
 
-prog_header = { (prog_name) ~ (prog_comment) }
+prog_header = { (prog_name) ~ (prog_comment) ~ prog_extend? }
 
 // pest autorules
-comment = _{ whitespace* ~ ("#" | ";" | ".extend") ~ (!"\n" ~ any)* ~ "\n" }
+comment = _{ whitespace* ~ ("#" | ";") ~ (!"\n" ~ any)* ~ "\n" }
 whitespace = _{ " " | "\t" | "\r" | "\n" }
 
 quotted_string = @{ "\"" ~ (!"\"" ~ any)* ~ "\"" }
 prog_name = { ".name" ~ (quotted_string) }
 prog_comment = { ".comment" ~ (quotted_string) }
+prog_extend = { ".extend" }
 
 identifier = { (label_decl | instr) }
 
@@ -17,7 +18,22 @@ label = { ('a'..'z' | '0'..'9' | "_")+ }
 label_decl = @{ (label) ~ ":" }
 label_name = @{ ":" ~ (label) }
 
-instr = { (live | load | store | addition | substraction | and | or | xor | zjump | loadindex | storeindex | fork | longload | longloadindex | longfork | display) }
+instr = { (live |
+           load |
+           store |
+           addition |
+           substraction |
+           and |
+           or |
+           xor |
+           zjump |
+           loadindex |
+           storeindex |
+           fork |
+           longload |
+           longloadindex |
+           longfork |
+           display) }
 
 live = { "live" ~ (direct) }
 load = { "ld" ~ (direct | indirect) ~ "," ~ (register) }
@@ -37,8 +53,9 @@ longfork = { "lfork" ~ (direct) }
 display = { "aff" ~ (register) | "disp" ~ (register) } // reduce this
 
 // urgh! ugly "comment?"
-register = @{ "r" ~ (numbers) ~ comment? }
-direct = @{ "%" ~ (numbers | "-" ~ numbers | label_name) ~ comment? }
-indirect = @{ (numbers | "-" ~ numbers | label_name)  ~ comment? }
+register = @{ "r" ~ (number) ~ comment? }
+direct = @{ "%" ~ (hexnumber | number | "-" ~ number | label_name) ~ comment? }
+indirect = @{ (hexnumber | number | "-" ~ number | label_name)  ~ comment? }
 
-numbers = @{ ('0'..'9')+ }
+number = @{ ('0'..'9')+ }
+hexnumber = @{ "0x" ~ ('0'..'9' | 'a'..'f' | 'A'..'F')+ }
