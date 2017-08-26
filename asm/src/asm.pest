@@ -1,18 +1,16 @@
 // ugly comments everywhere
-asm = { soi ~ comment* ~ (prog_header) ~ (comment | identifier)* ~ eoi }
+asm = { soi ~ comment* ~ (prog_header) ~ (comment | (label_decl | instr))* ~ eoi }
 
 prog_header = { (prog_name) ~ (prog_comment) ~ prog_extend? }
 
 // pest autorules
-comment = _{ whitespace* ~ ("#" | ";") ~ (!"\n" ~ any)* ~ "\n" }
+comment = _{ whitespace* ~ "#" ~ (!"\n" ~ any)* ~ "\n" }
 whitespace = _{ " " | "\t" | "\r" | "\n" }
 
 quotted_string = @{ "\"" ~ (!"\"" ~ any)* ~ "\"" }
 prog_name = { ".name" ~ (quotted_string) }
 prog_comment = { ".comment" ~ (quotted_string) }
 prog_extend = { ".extend" }
-
-identifier = { (label_decl | instr) }
 
 label = { ('a'..'z' | '0'..'9' | "_")+ }
 label_decl = @{ (label) ~ ":" }
