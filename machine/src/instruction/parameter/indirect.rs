@@ -12,6 +12,12 @@ use core::IDX_MOD;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Indirect(i16);
 
+impl Indirect {
+    pub fn mem_size() -> usize {
+        IND_SIZE
+    }
+}
+
 impl GetValue for Indirect {
     fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
         let addr = context.pc.move_by(self.0 as isize % IDX_MOD as isize);
@@ -42,7 +48,7 @@ impl SetValue for Indirect {
 
 impl MemSize for Indirect {
     fn mem_size(&self) -> usize {
-        IND_SIZE
+        Indirect::mem_size()
     }
 }
 

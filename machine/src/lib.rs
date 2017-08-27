@@ -11,7 +11,7 @@ pub mod champion;
 pub mod program;
 pub mod arena;
 mod process;
-mod instruction;
+pub mod instruction;
 
 pub use machine::{Machine, CycleExecute};
 

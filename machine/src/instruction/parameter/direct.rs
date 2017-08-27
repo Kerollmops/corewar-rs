@@ -10,6 +10,12 @@ use process::Context;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direct(i32);
 
+impl Direct {
+    pub fn mem_size() -> usize {
+        DIR_SIZE
+    }
+}
+
 impl GetValue for Direct {
     fn get_value(&self, _vm: &Machine, _context: &Context) -> i32 {
         self.0
@@ -18,7 +24,7 @@ impl GetValue for Direct {
 
 impl MemSize for Direct {
     fn mem_size(&self) -> usize {
-        DIR_SIZE
+        Direct::mem_size()
     }
 }
 

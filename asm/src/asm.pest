@@ -1,59 +1,33 @@
 // ugly comments everywhere
-asm = { soi ~ comment* ~ (prog_header) ~ (comment | (label_decl | instr))* ~ eoi }
+asm = { soi ~ comment* ~ props ~ (comment | label_decl | instr)* ~ eoi }
 
-prog_header = { (prog_name) ~ (prog_comment) ~ prog_extend? }
+prop_name = @{ 'a'..'z'+ }
+prop_value = ${ quotted_string }
+prop = ${ "." ~ prop_name ~ (space+ ~ prop_value)? }
+props = ${ (prop ~ new_line)* }
 
 // pest autorules
 comment = _{ whitespace* ~ "#" ~ (!"\n" ~ any)* ~ "\n" }
-whitespace = _{ " " | "\t" | "\r" | "\n" }
+new_line = _{ "\r\n" | "\n" }
+space = _{ " " | "\t" }
+whitespace = _{ space | new_line }
 
-quotted_string = @{ "\"" ~ (!"\"" ~ any)* ~ "\"" }
-prog_name = { ".name" ~ (quotted_string) }
-prog_comment = { ".comment" ~ (quotted_string) }
-prog_extend = { ".extend" }
+inner_string = { (!"\"" ~ any)* }
+quotted_string = ${ "\"" ~ inner_string ~ "\"" }
 
-label = { ('a'..'z' | '0'..'9' | "_")+ }
-label_decl = @{ (label) ~ ":" }
-label_name = @{ ":" ~ (label) }
+label_name = @{ ('a'..'z' | '0'..'9' | "_")+ }
+label_decl = ${ label_name ~ ":" }
+label_call = ${ ":" ~ label_name }
 
-instr = { (live |
-           load |
-           store |
-           addition |
-           substraction |
-           and |
-           or |
-           xor |
-           zjump |
-           loadindex |
-           storeindex |
-           fork |
-           longload |
-           longloadindex |
-           longfork |
-           display) }
+instr_name = @{ 'a'..'z'+ }
+instr_name_space = ${ instr_name ~ whitespace }
+instr = { instr_name_space ~ (parameter ~ ",")* ~ parameter }
 
-live = { "live" ~ (direct) }
-load = { "ld" ~ (direct | indirect) ~ "," ~ (register) }
-store = { "st" ~ (register) ~ "," ~ (indirect | register) }
-addition = { "add" ~ (register) ~ "," ~ (register) ~ "," ~ (register) }
-substraction = { "sub" ~ (register) ~ "," ~ (register) ~ "," ~ (register) }
-and = { "and" ~ (direct | indirect | register) ~ "," ~ (direct | indirect | register) ~ "," ~ (register) }
-or = { "or" ~ (direct | indirect | register) ~ "," ~ (direct | indirect | register) ~ "," ~ (register) }
-xor = { "xor" ~ (direct | indirect | register) ~ "," ~ (direct | indirect | register) ~ "," ~ (register) }
-zjump = { "zjmp" ~ (direct) }
-loadindex = { "ldi" ~ (direct | indirect | register) ~ "," ~ (direct | register) ~ "," ~ (register) }
-storeindex = { "sti" ~ (register) ~ "," ~ (direct | indirect | register) ~ "," ~ (direct | register) }
-fork = { "fork" ~ (direct) }
-longload = { "lld" ~ (direct | indirect) ~ "," ~ (register) }
-longloadindex = { "lldi" ~ (direct | indirect | register) ~ "," ~ (direct | register) ~ "," ~ (register) }
-longfork = { "lfork" ~ (direct) }
-display = { "aff" ~ (register) | "disp" ~ (register) } // reduce this
+parameter = { direct | indirect | register }
 
-// urgh! ugly "comment?"
-register = @{ "r" ~ (number) ~ comment? }
-direct = @{ "%" ~ (hexnumber | number | "-" ~ number | label_name) ~ comment? }
-indirect = @{ (hexnumber | number | "-" ~ number | label_name)  ~ comment? }
+register = @{ "r" ~ number }
+direct = @{ "%" ~ (hexnumber | "-"? ~ number | label_call) }
+indirect = @{ (hexnumber | "-"? ~ number | label_call) }
 
-number = @{ ('0'..'9')+ }
+number = @{ '0'..'9'+ }
 hexnumber = @{ "0x" ~ ('0'..'9' | 'a'..'f' | 'A'..'F')+ }

@@ -15,6 +15,12 @@ pub struct InvalidRegister(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Register(u8);
 
+impl Register {
+    pub fn mem_size() -> usize {
+        REG_SIZE
+    }
+}
+
 impl GetValue for Register {
     fn get_value(&self, _vm: &Machine, context: &Context) -> i32 {
         context.registers[*self]
@@ -23,7 +29,7 @@ impl GetValue for Register {
 
 impl MemSize for Register {
     fn mem_size(&self) -> usize {
-        REG_SIZE
+        Register::mem_size()
     }
 }
 

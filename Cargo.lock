@@ -19,9 +19,10 @@ dependencies = [
 name = "asm"
 version = "0.1.0"
 dependencies = [
+ "core 0.1.0",
  "machine 0.1.0",
- "pest 1.0.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pest_derive 1.0.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pest 1.0.0-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pest_derive 1.0.0-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -80,15 +81,15 @@ dependencies = [
 
 [[package]]
 name = "pest"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pest_derive"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "pest 1.0.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pest 1.0.0-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.10.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -169,8 +170,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum libc 0.2.29 (registry+https://github.com/rust-lang/crates.io-index)" = "8a014d9226c2cc402676fbe9ea2e15dd5222cd1dd57f576b5b283178c944a264"
 "checksum log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "880f77541efa6e5cc74e76910c9884d9859683118839d6a1dc3b11e63512565b"
 "checksum memchr 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)" = "d8b629fb514376c675b98c1421e80b151d3817ac42d7c667717d282761418d20"
-"checksum pest 1.0.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)" = "deef69e1364f0999e60e9006cf6e937ee868da0a632d0412582df05c43cd3163"
-"checksum pest_derive 1.0.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)" = "99e6b042455ccea4cac88052cc03dc0e5c013842444bd1e92f7fb1c3dc70be8a"
+"checksum pest 1.0.0-beta.5 (registry+https://github.com/rust-lang/crates.io-index)" = "5e3828b8b0151a514fbcb1d14439c43243ce4408c98cb891c4b4ecbce1c39bf1"
+"checksum pest_derive 1.0.0-beta.5 (registry+https://github.com/rust-lang/crates.io-index)" = "b474cfcafb607487bc72cf3a9888beec9ef104e79dc74f5ca8c93045ba6c88e5"
 "checksum quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e920b65c65f10b2ae65c831a81a073a89edd28c7cce89475bff467ab4167a"
 "checksum regex 0.1.80 (registry+https://github.com/rust-lang/crates.io-index)" = "4fd4ace6a8cf7860714a2c2280d6c1f7e6a413486c13298bbc86fd3da019402f"
 "checksum regex-syntax 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "f9ec002c35e86791825ed294b50008eea9ddfc8def4420124fbc6b08db834957"

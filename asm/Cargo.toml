@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 
 [dependencies]
-pest = "1.0.0-beta.4"
-pest_derive = "1.0.0-beta.4"
+pest = "1.0.0-beta"
+pest_derive = "1.0.0-beta"
+core = { path = "../core" }
 machine = { path = "../machine" }
