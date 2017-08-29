@@ -1,4 +1,5 @@
 pub mod parameter;
+pub mod const_mem_size;
 mod mem_size;
 mod get_value;
 mod set_value;

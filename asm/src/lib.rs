@@ -3,11 +3,16 @@ extern crate pest;
 extern crate core;
 extern crate machine;
 
+mod var_instr;
+mod property;
+
 use std::io::{Read, Write};
+use std::collections::HashMap;
 use pest::{Parser, Error};
-use pest::inputs::{StringInput, Span};
+use pest::inputs::{Input, StringInput, Span};
 use machine::instruction::Instruction;
-// use machine::instruction::parameter::{Direct, Indirect, Register};
+use var_instr::VarInstr;
+use property::Property;
 
 // force recompilation
 const _GRAMMAR: &'static str = include_str!("asm.pest");
@@ -17,6 +22,10 @@ const _GRAMMAR: &'static str = include_str!("asm.pest");
 struct AsmParser;
 
 pub type AsmError = Error<Rule, StringInput>;
+type Offset = usize;
+
+#[derive(Debug)]
+struct Label(String); // TODO: ugly, performances
 
 #[derive(Debug)]
 struct Champion {
@@ -25,30 +34,8 @@ struct Champion {
     program: Vec<Instruction>,
 }
 
-// #[derive(Debug)]
-// enum AsmParam<T> {
-//     Complete(T),
-//     Incomplete(T, ()),
-// }
-
-// #[derive(Debug)]
-// enum AsmInstr {
-//     Live(Direct),
-//     Load(DirInd, Register),
-//     Store(Register, IndReg),
-//     Addition(Register, Register, Register),
-//     Substraction(Register, Register, Register),
-//     And(DirIndReg, DirIndReg, Register),
-//     Or(DirIndReg, DirIndReg, Register),
-//     Xor(DirIndReg, DirIndReg, Register),
-//     ZJump(Direct),
-//     LoadIndex(DirIndReg, DirReg, Register),
-//     StoreIndex(Register, DirIndReg, DirReg),
-//     Fork(Direct),
-//     LongLoad(DirInd, Register),
-//     LongLoadIndex(DirIndReg, DirReg, Register),
-//     Longfork(Direct),
-//     Display(Register),
+// fn retrieve_variable_instructions() -> (HashMap<Label, Offset>, Vec<VarInstr>) {
+//     unimplemented!()
 // }
 
 pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), AsmError> {
@@ -58,6 +45,8 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
 
     let pairs = AsmParser::parse_str(Rule::asm, &content)?;
 
+    let mut properties = HashMap::new();
+
     // Because ident_list is silent, the iterator will contain idents
     for pair in pairs {
 
@@ -65,28 +54,12 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
         for inner_pair in pair.into_inner() {
             match inner_pair.as_rule() {
                 Rule::props => {
-
                     println!("props: ");
-                    for inner_pair in inner_pair.into_inner() {
-                        for inner_pair in inner_pair.into_inner() {
-                            match inner_pair.as_rule() {
-                                Rule::prop_name => println!("  name: {:?}", inner_pair.into_span().as_str()),
-                                Rule::prop_value => for inner_pair in inner_pair.into_inner() {
-                                    match inner_pair.as_rule() {
-                                        Rule::quotted_string => for inner_pair in inner_pair.into_inner() {
-                                            match inner_pair.as_rule() {
-                                                Rule::inner_string => println!("  value: {:?}", inner_pair.into_span().as_str()),
-                                                _ => unreachable!(),
-                                            }
-                                        },
-                                        _ => unreachable!(),
-                                    }
-                                },
-                                _ => unreachable!(),
-                            }
-                        }
+                    for property_pair in inner_pair.into_inner() {
+                        let Property{ name, value } = Property::from(property_pair);
+                        println!("  .{} {:?}", name, value);
+                        properties.insert(name, value);
                     }
-
                     println!();
                 },
                 Rule::instr => {

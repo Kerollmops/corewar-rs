@@ -2,6 +2,7 @@ use std::io::{Read, Write};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::DIR_SIZE;
 use instruction::mem_size::MemSize;
+use instruction::const_mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
@@ -10,8 +11,8 @@ use process::Context;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direct(i32);
 
-impl Direct {
-    pub fn mem_size() -> usize {
+impl ConstMemSize for Direct {
+    fn mem_size() -> usize {
         DIR_SIZE
     }
 }
@@ -24,7 +25,7 @@ impl GetValue for Direct {
 
 impl MemSize for Direct {
     fn mem_size(&self) -> usize {
-        Direct::mem_size()
+        <Direct as ConstMemSize>::mem_size()
     }
 }
 

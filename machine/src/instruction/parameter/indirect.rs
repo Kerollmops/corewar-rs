@@ -2,6 +2,7 @@ use std::io::{Read, Write};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::MemSize;
+use instruction::const_mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use instruction::set_value::SetValue;
@@ -12,8 +13,8 @@ use core::IDX_MOD;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Indirect(i16);
 
-impl Indirect {
-    pub fn mem_size() -> usize {
+impl ConstMemSize for Indirect {
+    fn mem_size() -> usize {
         IND_SIZE
     }
 }
@@ -48,7 +49,7 @@ impl SetValue for Indirect {
 
 impl MemSize for Indirect {
     fn mem_size(&self) -> usize {
-        Indirect::mem_size()
+        <Indirect as ConstMemSize>::mem_size()
     }
 }
 
