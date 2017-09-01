@@ -49,9 +49,9 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
     let mut pairs = AsmParser::parse_str(Rule::asm, &content)?;
 
     let mut properties = HashMap::new();
+    let mut label_offsets = HashMap::new();
     let mut var_instrs = Vec::new();
     let mut offset = 0;
-    let mut label_offsets = HashMap::new();
 
     for inner_pair in pairs.next().unwrap().into_inner() {
         match inner_pair.as_rule() {
@@ -91,30 +91,6 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
             })
         }
     }
-
-    debug!("properties:");
-    for property in &properties {
-        debug!("  property: {:?}", property);
-    }
-    debug!("");
-
-    debug!("variable instructions:");
-    for var_instr in &var_instrs {
-        debug!("  var_instr: {:?}", var_instr);
-    }
-    debug!("");
-
-    debug!("labels:");
-    for label in &label_offsets {
-        debug!("  label: {:?}", label);
-    }
-    debug!("");
-
-    debug!("instructions:");
-    for instr in &instrs {
-        debug!("  instr: {:?}", instr);
-    }
-    debug!("");
 
     Ok(())
 }
