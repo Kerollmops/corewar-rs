@@ -1,11 +1,9 @@
-use pest::inputs::StringInput;
-use pest::iterators::Pair;
-use super::{Rule, AsmPair};
+use super::{Rule, AsmSpan, AsmPair};
 
 #[derive(Debug)]
 pub struct Property {
-    pub name: String,
-    pub value: Option<String>,
+    pub name: AsmSpan,
+    pub value: Option<AsmSpan>,
 }
 impl From<AsmPair> for Property {
     fn from(value: AsmPair) -> Self {
@@ -18,8 +16,8 @@ impl From<AsmPair> for Property {
         let value_string = quotted.map(|q| q.into_inner().find(|p| p.as_rule() == Rule::inner_string).unwrap());
 
         Property {
-            name: name.into_span().as_str().into(),
-            value: value_string.map(|v| v.into_span().as_str().into()),
+            name: name.into_span(),
+            value: value_string.map(|v| v.into_span()),
         }
     }
 }

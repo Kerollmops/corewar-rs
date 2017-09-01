@@ -1,4 +1,5 @@
 #![feature(try_from)]
+#![feature(const_fn)]
 
 #[macro_use] extern crate log;
 extern crate pest;
@@ -11,13 +12,14 @@ mod property;
 mod label;
 
 use std::io::{Read, Write};
+use std::mem;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use pest::{Parser, Error};
 use pest::inputs::{StringInput, Span};
 use pest::iterators::Pair;
 use machine::instruction::mem_size::MemSize;
-use machine::instruction::Instruction;
+use core::{Header, COREWAR_EXEC_MAGIC, PROG_NAME_LENGTH, COMMENT_LENGTH};
 use var_instr::variable::LabelNotFound;
 use var_instr::VarInstr;
 use property::Property;
@@ -34,13 +36,6 @@ type AsmPair = Pair<Rule, StringInput>;
 type AsmSpan = Span<StringInput>;
 pub type AsmError = Error<Rule, StringInput>;
 
-#[derive(Debug)]
-struct Champion {
-    name: String,
-    comment: String,
-    program: Vec<Instruction>,
-}
-
 pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), AsmError> {
 
     let mut content = String::new();
@@ -53,11 +48,12 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
     let mut var_instrs = Vec::new();
     let mut offset = 0;
 
-    for inner_pair in pairs.next().unwrap().into_inner() {
+    let pair = pairs.next().unwrap();
+    for inner_pair in pair.clone().into_inner() {
         match inner_pair.as_rule() {
             Rule::props => for property_pair in inner_pair.into_inner() {
                 let Property{ name, value } = Property::from(property_pair);
-                properties.insert(name, value);
+                properties.insert(name.as_str().to_string(), (name, value));
             },
             Rule::instr => {
                 let var_instr = VarInstr::try_from(inner_pair)?;
@@ -91,6 +87,56 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
             })
         }
     }
+
+    let mut header = Header {
+        magic: COREWAR_EXEC_MAGIC.to_be(),
+        prog_name: [0u8; PROG_NAME_LENGTH + 1],
+        prog_size: instrs.iter().map(|instr| instr.mem_size()).sum::<usize>() as u32,
+        comment: [0u8; COMMENT_LENGTH + 1],
+    };
+
+    match properties.get("name") {
+        Some(&(_, Some(ref value))) if value.as_str().is_empty() => return Err(Error::CustomErrorSpan {
+            message: "name property's value can't be empty".into(),
+            span: value.clone(),
+        }),
+        Some(&(_, Some(ref value))) => {
+            let max_name_len = PROG_NAME_LENGTH;
+            let value_len = value.as_str().as_bytes().len();
+            let len = if max_name_len < value_len {
+                eprintln!("name property's value as been clamped to {} chars.", max_name_len);
+                max_name_len
+            } else { value_len };
+
+            let value_bytes = &value.as_str().as_bytes()[..len];
+            (&mut header.prog_name[..]).write_all(value_bytes).unwrap();
+        },
+        Some(&(ref span, None)) => return Err(Error::CustomErrorPos {
+            message: "name property need a value".into(),
+            pos: span.start_pos(),
+        }),
+        None => return Err(Error::CustomErrorPos {
+            message: "name property not found".into(),
+            pos: pair.into_span().start_pos().clone(),
+        }),
+    }
+
+    if let Some(&(_, Some(ref value))) = properties.get("comment") {
+        let max_comment_len = COMMENT_LENGTH;
+        let value_len = value.as_str().as_bytes().len();
+        let len = if max_comment_len < value_len {
+            eprintln!("comment property's value as been clamped to {} chars.", max_comment_len);
+            max_comment_len
+        } else { value_len };
+
+        let value_bytes = &value.as_str().as_bytes()[..len];
+        (&mut header.comment[..]).write_all(value_bytes).unwrap();
+    }
+
+    let mut header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
+    output.write_all(&mut header).unwrap();
+
+    //
 
     Ok(())
 }

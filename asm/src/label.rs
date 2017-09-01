@@ -1,8 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::fmt;
-use pest::inputs::StringInput;
-use pest::iterators::Pair;
-use ::{Rule, AsmPair, AsmSpan};
+use ::{AsmPair, AsmSpan};
 
 #[derive(Clone, Eq)]
 pub struct Label {

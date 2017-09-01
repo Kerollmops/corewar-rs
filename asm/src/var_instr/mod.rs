@@ -9,7 +9,7 @@ use machine::instruction::{OP_CODE_SIZE, PARAM_CODE_SIZE};
 use machine::instruction::parameter::*;
 use self::variable::*;
 use label::Label;
-use ::{Rule, AsmPair, AsmError};
+use ::{AsmPair, AsmError};
 
 #[derive(Debug)]
 pub enum VarInstr {
