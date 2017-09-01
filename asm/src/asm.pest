@@ -4,7 +4,7 @@ asm = { soi ~ comment* ~ props ~ (comment | label_decl | instr)* ~ eoi }
 prop_name = @{ 'a'..'z'+ }
 prop_value = ${ quotted_string }
 prop = ${ "." ~ prop_name ~ (space+ ~ prop_value)? }
-props = ${ (prop ~ new_line)* }
+props = ${ (whitespace* ~ prop ~ new_line)* }
 
 // pest autorules
 comment = _{ whitespace* ~ "#" ~ (!"\n" ~ any)* ~ "\n" }
@@ -12,7 +12,7 @@ new_line = _{ "\r\n" | "\n" }
 space = _{ " " | "\t" }
 whitespace = _{ space | new_line }
 
-inner_string = { (!"\"" ~ any)* }
+inner_string = @{ (!"\"" ~ any)* }
 quotted_string = ${ "\"" ~ inner_string ~ "\"" }
 
 label_name = @{ ('a'..'z' | '0'..'9' | "_")+ }

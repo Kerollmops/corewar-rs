@@ -136,7 +136,9 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
     let mut header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
     output.write_all(&mut header).unwrap();
 
-    //
+    for instr in instrs {
+        instr.write_to(output);
+    }
 
     Ok(())
 }

@@ -176,87 +176,87 @@ impl Instruction {
         }
     }
 
-    pub fn write_to<W: Write>(&self, mut writer: W) {
+    pub fn write_to<W: Write>(&self, writer: &mut W) {
         let _ = writer.write(&[self.op_code()]);
         match *self {
             NoOp => (),
-            Live(dir) => { let _ = dir.write_to(&mut writer); },
+            Live(dir) => { let _ = dir.write_to(writer); },
             Load(dir_ind, reg) => {
                 let code = ParamCode::builder().first(&dir_ind).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind.write_to(writer);
+                let _ = reg.write_to(writer);
             },
             Store(reg, ind_reg) => {
                 let code = ParamCode::builder().second(&ind_reg).build();
-                let _ = code.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
-                let _ = ind_reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = reg.write_to(writer);
+                let _ = ind_reg.write_to(writer);
             },
             Addition(reg_a, reg_b, reg_c) => {
-                let _ = reg_a.write_to(&mut writer);
-                let _ = reg_b.write_to(&mut writer);
-                let _ = reg_c.write_to(&mut writer);
+                let _ = reg_a.write_to(writer);
+                let _ = reg_b.write_to(writer);
+                let _ = reg_c.write_to(writer);
             },
             Substraction(reg_a, reg_b, reg_c) => {
-                let _ = reg_a.write_to(&mut writer);
-                let _ = reg_b.write_to(&mut writer);
-                let _ = reg_c.write_to(&mut writer);
+                let _ = reg_a.write_to(writer);
+                let _ = reg_b.write_to(writer);
+                let _ = reg_c.write_to(writer);
             },
             And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind_reg_a.write_to(&mut writer);
-                let _ = dir_ind_reg_b.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind_reg_a.write_to(writer);
+                let _ = dir_ind_reg_b.write_to(writer);
+                let _ = reg.write_to(writer);
             },
             Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind_reg_a.write_to(&mut writer);
-                let _ = dir_ind_reg_b.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind_reg_a.write_to(writer);
+                let _ = dir_ind_reg_b.write_to(writer);
+                let _ = reg.write_to(writer);
             },
             Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind_reg_a.write_to(&mut writer);
-                let _ = dir_ind_reg_b.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind_reg_a.write_to(writer);
+                let _ = dir_ind_reg_b.write_to(writer);
+                let _ = reg.write_to(writer);
             },
-            ZJump(dir) => { let _ = dir.write_to(&mut writer); },
+            ZJump(dir) => { let _ = dir.write_to(writer); },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind_reg.write_to(&mut writer);
-                let _ = dir_reg.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind_reg.write_to(writer);
+                let _ = dir_reg.write_to(writer);
+                let _ = reg.write_to(writer);
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
                 let code = ParamCode::builder().second(&dir_ind_reg).third(&dir_reg).build();
-                let _ = code.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
-                let _ = dir_ind_reg.write_to(&mut writer);
-                let _ = dir_reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = reg.write_to(writer);
+                let _ = dir_ind_reg.write_to(writer);
+                let _ = dir_reg.write_to(writer);
             },
-            Fork(dir) => { let _ = dir.write_to(&mut writer); },
+            Fork(dir) => { let _ = dir.write_to(writer); },
             LongLoad(dir_ind, reg) => {
                 let code = ParamCode::builder().first(&dir_ind).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind.write_to(writer);
+                let _ = reg.write_to(writer);
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build();
-                let _ = code.write_to(&mut writer);
-                let _ = dir_ind_reg.write_to(&mut writer);
-                let _ = dir_reg.write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = code.write_to(writer);
+                let _ = dir_ind_reg.write_to(writer);
+                let _ = dir_reg.write_to(writer);
+                let _ = reg.write_to(writer);
             },
-            LongFork(dir) => { let _ = dir.write_to(&mut writer); },
+            LongFork(dir) => { let _ = dir.write_to(writer); },
             Display(reg) => {
-                let _ = ParamCode::null().write_to(&mut writer);
-                let _ = reg.write_to(&mut writer);
+                let _ = ParamCode::null().write_to(writer);
+                let _ = reg.write_to(writer);
             },
         }
     }

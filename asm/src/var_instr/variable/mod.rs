@@ -52,7 +52,7 @@ impl FromPair for Variable<Direct> {
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::hexnumber => {
-                        let number = i32::from_str_radix(span_value.clone().as_str(), 16);
+                        let number = i32::from_str_radix(&span_value.clone().as_str()[2..], 16);
                         number.map(|n| Variable::Complete(Direct::from(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
@@ -94,7 +94,7 @@ impl FromPair for Variable<Indirect> {
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::hexnumber => {
-                        let number = i16::from_str_radix(span_value.clone().as_str(), 16);
+                        let number = i16::from_str_radix(&span_value.clone().as_str()[2..], 16);
                         number.map(|n| Variable::Complete(Indirect::from(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
