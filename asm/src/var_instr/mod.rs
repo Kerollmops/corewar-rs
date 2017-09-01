@@ -107,181 +107,187 @@ impl MemSize for VarInstr {
     }
 }
 
+macro_rules! next_param {
+    ($instr:ident) => {
+        $instr.next().and_then(|p| p.into_inner().next())
+    };
+}
+
 impl TryFrom<AsmPair> for VarInstr {
     type Error = AsmError;
 
     fn try_from(instr: AsmPair) -> Result<Self, Self::Error> {
         let instr_span = instr.clone().into_span();
         let mut instr = instr.into_inner();
-        let name = instr.by_ref().find(|p| p.as_rule() == Rule::instr_name).unwrap().into_span();
+        let name = instr.by_ref().next().unwrap().into_inner().next().unwrap().into_span();
         match name.as_str() {
-            "live" => match instr.next() {
-                Some(pair) => Ok(VarInstr::Live(Variable::from_pair(pair)?)),
-                None => Err(Error::CustomErrorSpan {
-                    message: "missing parameter".into(),
+            "live" => match (next_param!(instr), next_param!(instr)) {
+                (Some(pair), None) => Ok(VarInstr::Live(Variable::from_pair(pair)?)),
+                _ => Err(Error::CustomErrorSpan {
+                    message: "expected one parameter".into(),
                     span: instr_span.clone(),
                 }),
             },
-            "ld" => match (instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b)) => {
+            "ld" => match (next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), None) => {
                     let var_dir_ind = VarDirInd::from_pair(pair_a)?;
                     let reg = Register::from_pair(pair_b)?;
                     Ok(VarInstr::Load(var_dir_ind, reg))
                 },
-                (_, _) => Err(Error::CustomErrorSpan {
+                _ => Err(Error::CustomErrorSpan {
                     message: "expected two parameters".into(),
                     span: instr_span.clone()
                 })
             },
-            "st" => match (instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b)) => {
+            "st" => match (next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), None) => {
                     let reg = Register::from_pair(pair_a)?;
                     let ind_reg = VarIndReg::from_pair(pair_b)?;
                     Ok(VarInstr::Store(reg, ind_reg))
                 },
-                (_, _) => Err(Error::CustomErrorSpan {
+                _ => Err(Error::CustomErrorSpan {
                     message: "expected two parameters".into(),
                     span: instr_span.clone()
                 })
             },
-            "add" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "add" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let reg_a = Register::from_pair(pair_a)?;
                     let reg_b = Register::from_pair(pair_b)?;
                     let reg_c = Register::from_pair(pair_c)?;
                     Ok(VarInstr::Addition(reg_a, reg_b, reg_c))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "sub" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "sub" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let reg_a = Register::from_pair(pair_a)?;
                     let reg_b = Register::from_pair(pair_b)?;
                     let reg_c = Register::from_pair(pair_c)?;
                     Ok(VarInstr::Substraction(reg_a, reg_b, reg_c))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "and" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "and" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let dir_ind_reg_a = VarDirIndReg::from_pair(pair_a)?;
                     let dir_ind_reg_b = VarDirIndReg::from_pair(pair_b)?;
                     let reg_c = Register::from_pair(pair_c)?;
                     Ok(VarInstr::And(dir_ind_reg_a, dir_ind_reg_b, reg_c))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "or" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "or" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let dir_ind_reg_a = VarDirIndReg::from_pair(pair_a)?;
                     let dir_ind_reg_b = VarDirIndReg::from_pair(pair_b)?;
                     let reg_c = Register::from_pair(pair_c)?;
                     Ok(VarInstr::Or(dir_ind_reg_a, dir_ind_reg_b, reg_c))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "xor" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "xor" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let dir_ind_reg_a = VarDirIndReg::from_pair(pair_a)?;
                     let dir_ind_reg_b = VarDirIndReg::from_pair(pair_b)?;
                     let reg_c = Register::from_pair(pair_c)?;
                     Ok(VarInstr::Xor(dir_ind_reg_a, dir_ind_reg_b, reg_c))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "zjump" => match instr.next() {
-                Some(pair) => Ok(VarInstr::ZJump(Variable::from_pair(pair)?)),
-                None => Err(Error::CustomErrorSpan {
-                    message: "missing parameter".into(),
+            "zjmp" => match (next_param!(instr), next_param!(instr)) {
+                (Some(pair), None) => Ok(VarInstr::ZJump(Variable::from_pair(pair)?)),
+                _ => Err(Error::CustomErrorSpan {
+                    message: "expected one parameter".into(),
                     span: instr_span.clone(),
                 }),
             },
-            "ldi" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "ldi" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let dir_ind_reg = VarDirIndReg::from_pair(pair_a)?;
                     let dir_reg = VarDirReg::from_pair(pair_b)?;
                     let reg = Register::from_pair(pair_c)?;
                     Ok(VarInstr::LoadIndex(dir_ind_reg, dir_reg, reg))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "sti" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "sti" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let reg = Register::from_pair(pair_a)?;
                     let dir_ind_reg = VarDirIndReg::from_pair(pair_b)?;
                     let dir_reg = VarDirReg::from_pair(pair_c)?;
                     Ok(VarInstr::StoreIndex(reg, dir_ind_reg, dir_reg))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "fork" => match instr.next() {
-                Some(pair) => Ok(VarInstr::Fork(Variable::from_pair(pair)?)),
-                None => Err(Error::CustomErrorSpan {
-                    message: "missing parameter".into(),
+            "fork" => match (next_param!(instr), next_param!(instr)) {
+                (Some(pair), None) => Ok(VarInstr::Fork(Variable::from_pair(pair)?)),
+                _ => Err(Error::CustomErrorSpan {
+                    message: "expected one parameter".into(),
                     span: instr_span.clone(),
                 }),
             },
-            "lld" => match (instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b)) => {
+            "lld" => match (next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), None) => {
                     let dir_ind = VarDirInd::from_pair(pair_a)?;
                     let reg = Register::from_pair(pair_b)?;
                     Ok(VarInstr::LongLoad(dir_ind, reg))
                 },
-                (_, _) => Err(Error::CustomErrorSpan {
+                _ => Err(Error::CustomErrorSpan {
                     message: "expected two parameters".into(),
                     span: instr_span.clone()
                 })
             },
-            "lldi" => match (instr.next(), instr.next(), instr.next()) {
-                (Some(pair_a), Some(pair_b), Some(pair_c)) => {
+            "lldi" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
+                (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let dir_ind_reg = VarDirIndReg::from_pair(pair_a)?;
                     let dir_reg = VarDirReg::from_pair(pair_b)?;
                     let reg = Register::from_pair(pair_c)?;
                     Ok(VarInstr::LongLoadIndex(dir_ind_reg, dir_reg, reg))
                 },
-                (_, _, _) => Err(Error::CustomErrorSpan {
+                (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
                     span: instr_span.clone()
-                })
+                }),
             },
-            "lfork" => match instr.next() {
-                Some(pair) => Ok(VarInstr::LongFork(Variable::from_pair(pair)?)),
-                None => Err(Error::CustomErrorSpan {
-                    message: "missing parameter".into(),
+            "lfork" => match (next_param!(instr), next_param!(instr)) {
+                (Some(pair), None) => Ok(VarInstr::LongFork(Variable::from_pair(pair)?)),
+                _ => Err(Error::CustomErrorSpan {
+                    message: "expected one parameter".into(),
                     span: instr_span.clone(),
                 }),
             },
-            "aff" | "disp" => match instr.next() {
-                Some(pair) => Ok(VarInstr::Display(Register::from_pair(pair)?)),
-                None => Err(Error::CustomErrorSpan {
-                    message: "missing parameter".into(),
+            "aff" | "disp" => match (next_param!(instr), next_param!(instr)) {
+                (Some(pair), None) => Ok(VarInstr::Display(Register::from_pair(pair)?)),
+                _ => Err(Error::CustomErrorSpan {
+                    message: "expected one parameter".into(),
                     span: instr_span.clone(),
-                })
+                }),
             },
             instr_name => Err(Error::CustomErrorSpan {
                 message: format!("unknown instruction {}", instr_name),
-                span: name.clone()
+                span: name.clone(),
             }),
         }
     }

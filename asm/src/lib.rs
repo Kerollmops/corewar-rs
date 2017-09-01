@@ -11,9 +11,11 @@ mod label;
 
 use std::io::{Read, Write};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use pest::{Parser, Error};
 use pest::inputs::StringInput;
 use pest::iterators::Pair;
+use machine::instruction::mem_size::MemSize;
 use machine::instruction::Instruction;
 use var_instr::VarInstr;
 use property::Property;
@@ -28,7 +30,6 @@ struct AsmParser;
 
 type AsmPair = Pair<Rule, StringInput>;
 pub type AsmError = Error<Rule, StringInput>;
-type Offset = usize;
 
 #[derive(Debug)]
 struct Champion {
@@ -49,6 +50,9 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
     let pairs = AsmParser::parse_str(Rule::asm, &content)?;
 
     let mut properties = HashMap::new();
+    let mut var_instrs = Vec::new();
+    let mut offset = 0;
+    let mut label_offsets = HashMap::new();
 
     // Because ident_list is silent, the iterator will contain idents
     for pair in pairs {
@@ -56,28 +60,41 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
         // A pair can be converted to an iterator of the tokens which make it up:
         for inner_pair in pair.into_inner() {
             match inner_pair.as_rule() {
-                Rule::props => {
-                    println!("props: ");
-                    for property_pair in inner_pair.into_inner() {
-                        let Property{ name, value } = Property::from(property_pair);
-                        println!("  .{} {:?}", name, value);
-                        properties.insert(name, value);
-                    }
-                    println!();
+                Rule::props => for property_pair in inner_pair.into_inner() {
+                    let Property{ name, value } = Property::from(property_pair);
+                    properties.insert(name, value);
                 },
                 Rule::instr => {
-
-                    println!();
+                    let var_instr = VarInstr::try_from(inner_pair)?;
+                    offset += var_instr.mem_size();
+                    var_instrs.push(var_instr);
                 },
                 Rule::label_decl => {
-                    println!("label_decl:");
-                    let Label{ name } = Label::from(inner_pair);
-                    println!("  name: {}", name);
-                    println!();
+                    let label = Label::from(inner_pair);
+                    assert!(label_offsets.insert(label, offset).is_none(), "label already declared"); // FIXME: handle this error
                 },
-                _ => (),
+                _ => unreachable!(),
             };
         }
     }
+
+    println!("properties:");
+    for property in properties {
+        println!("  prop: {:?}", property);
+    }
+    println!();
+
+    println!("variable instructions");
+    for var_instr in var_instrs {
+        println!("  instr: {:?}", var_instr);
+    }
+    println!();
+
+    println!("labels");
+    for label in label_offsets {
+        println!("  label: {:?}", label);
+    }
+    println!();
+
     Ok(())
 }

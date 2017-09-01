@@ -55,7 +55,7 @@ impl FromPair for Variable<Direct> {
     fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError> {
         match pair.as_rule() {
             ::Rule::direct => {
-                let pair_value = pair.into_inner().next().unwrap();
+                let pair_value = pair.into_inner().next().expect("number not found");
                 let span_value = pair_value.clone().into_span();
                 match pair_value.as_rule() {
                     ::Rule::number => {
@@ -97,7 +97,7 @@ impl FromPair for Variable<Indirect> {
     fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError> {
         match pair.as_rule() {
             ::Rule::indirect => {
-                let pair_value = pair.into_inner().next().unwrap();
+                let pair_value = pair.into_inner().next().expect("number not found");
                 let span_value = pair_value.clone().into_span();
                 match pair_value.as_rule() {
                     ::Rule::number => {
@@ -139,7 +139,7 @@ impl FromPair for Register {
     fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError> {
         match pair.as_rule() {
             ::Rule::register => {
-                let pair_number = pair.into_inner().next().unwrap();
+                let pair_number = pair.into_inner().next().expect("number not found");
                 let span_number = pair_number.clone().into_span();
                 let number = u8::from_str_radix(span_number.clone().as_str(), 10);
                 number.map_err(|e| e.to_string())
