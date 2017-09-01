@@ -1,6 +1,6 @@
 pub mod parameter;
 pub mod const_mem_size;
-mod mem_size;
+pub mod mem_size;
 mod get_value;
 mod set_value;
 mod write_to;
@@ -18,8 +18,8 @@ use machine::Machine;
 use process::Context;
 use core::IDX_MOD;
 
-const OP_CODE_SIZE:     usize = 1;
-const PARAM_CODE_SIZE:  usize = 1;
+pub const OP_CODE_SIZE:     usize = 1;
+pub const PARAM_CODE_SIZE:  usize = 1;
 
 use self::Instruction::*;
 
@@ -40,7 +40,7 @@ pub enum Instruction {
     Fork(Direct),
     LongLoad(DirInd, Register),
     LongLoadIndex(DirIndReg, DirReg, Register),
-    Longfork(Direct),
+    LongFork(Direct),
     Display(Register),
 }
 
@@ -163,7 +163,7 @@ impl Instruction {
 
                 LongLoadIndex(dir_ind_reg, dir_reg, reg)
             },
-            15 => Longfork(Direct::from(&mut reader)),
+            15 => LongFork(Direct::from(&mut reader)),
             16 => {
                 let _useless_param_code = ParamCode::from(&mut reader);
                 let reg = try_param!(Register, &mut reader);
@@ -253,7 +253,7 @@ impl Instruction {
                 let _ = dir_reg.write_to(&mut writer);
                 let _ = reg.write_to(&mut writer);
             },
-            Longfork(dir) => { let _ = dir.write_to(&mut writer); },
+            LongFork(dir) => { let _ = dir.write_to(&mut writer); },
             Display(reg) => {
                 let _ = ParamCode::null().write_to(&mut writer);
                 let _ = reg.write_to(&mut writer);
@@ -278,7 +278,7 @@ impl Instruction {
             Fork(_) => 12,
             LongLoad(_, _) => 13,
             LongLoadIndex(_, _, _) => 14,
-            Longfork(_) => 15,
+            LongFork(_) => 15,
             Display(_) => 16,
         }
     }
@@ -300,7 +300,7 @@ impl Instruction {
             Fork(_) => 800,
             LongLoad(_, _) => 10,
             LongLoadIndex(_, _, _) => 50,
-            Longfork(_) => 1000,
+            LongFork(_) => 1000,
             Display(_) => 2,
         }
     }
@@ -409,7 +409,7 @@ impl Instruction {
                 context.carry = { context.pc != ArenaIndex::zero() };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            Longfork(dir) => {
+            LongFork(dir) => {
                 let value: i32 = dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc = fork.pc.move_by(value as isize);
@@ -443,7 +443,7 @@ impl MemSize for Instruction {
             Fork(a) => a.mem_size(),
             LongLoad(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
             LongLoadIndex(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Longfork(a) => a.mem_size(),
+            LongFork(a) => a.mem_size(),
             Display(a) => PARAM_CODE_SIZE + a.mem_size(),
         };
         OP_CODE_SIZE + size

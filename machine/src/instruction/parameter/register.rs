@@ -1,5 +1,6 @@
 use std::io::{Read, Write};
 use std::convert::TryFrom;
+use std::fmt;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::MemSize;
@@ -13,13 +14,17 @@ use core::REG_MAX;
 #[derive(Debug, Clone, Copy)]
 pub struct InvalidRegister(pub u8);
 
+impl fmt::Display for InvalidRegister {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "invalid register number")
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Register(u8);
 
 impl ConstMemSize for Register {
-    fn mem_size() -> usize {
-        REG_SIZE
-    }
+    const MEM_SIZE: usize = REG_SIZE;
 }
 
 impl GetValue for Register {
@@ -30,7 +35,7 @@ impl GetValue for Register {
 
 impl MemSize for Register {
     fn mem_size(&self) -> usize {
-        <Register as ConstMemSize>::mem_size()
+        Register::MEM_SIZE
     }
 }
 

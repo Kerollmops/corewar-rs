@@ -1,3 +1,5 @@
+#![feature(try_from)]
+
 extern crate pest;
 #[macro_use] extern crate pest_derive;
 extern crate core;
@@ -5,14 +7,17 @@ extern crate machine;
 
 mod var_instr;
 mod property;
+mod label;
 
 use std::io::{Read, Write};
 use std::collections::HashMap;
 use pest::{Parser, Error};
-use pest::inputs::{Input, StringInput, Span};
+use pest::inputs::StringInput;
+use pest::iterators::Pair;
 use machine::instruction::Instruction;
 use var_instr::VarInstr;
 use property::Property;
+use label::Label;
 
 // force recompilation
 const _GRAMMAR: &'static str = include_str!("asm.pest");
@@ -21,11 +26,9 @@ const _GRAMMAR: &'static str = include_str!("asm.pest");
 #[grammar = "asm.pest"]
 struct AsmParser;
 
+type AsmPair = Pair<Rule, StringInput>;
 pub type AsmError = Error<Rule, StringInput>;
 type Offset = usize;
-
-#[derive(Debug)]
-struct Label(String); // TODO: ugly, performances
 
 #[derive(Debug)]
 struct Champion {
@@ -63,34 +66,13 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
                     println!();
                 },
                 Rule::instr => {
-                    for inner_pair in inner_pair.into_inner() {
-                        match inner_pair.as_rule() {
-                            Rule::instr_name_space => for inner_pair in inner_pair.into_inner() {
-                                match inner_pair.as_rule() {
-                                    Rule::instr_name => println!("  name: {:?}", inner_pair.into_span().as_str()),
-                                    _ => unreachable!(),
-                                }
-                            },
-                            Rule::parameter => for inner_pair in inner_pair.into_inner() {
-                                match inner_pair.as_rule() {
-                                    Rule::direct => println!("  direct: {:?}", inner_pair.into_span().as_str()),
-                                    Rule::indirect => println!("  indirect: {:?}", inner_pair.into_span().as_str()),
-                                    Rule::register => println!("  register: {:?}", inner_pair.into_span().as_str()),
-                                    _ => unreachable!(),
-                                }
-                            },
-                            _ => ()
-                        }
-                    }
+
                     println!();
                 },
                 Rule::label_decl => {
                     println!("label_decl:");
-                    let mut tmp = inner_pair.into_inner();
-                    let tmp = tmp.next().unwrap();
-                    let tmp = tmp.into_span();
-                    let label_name = tmp.as_str();
-                    println!("  name: {}", label_name);
+                    let Label{ name } = Label::from(inner_pair);
+                    println!("  name: {}", name);
                     println!();
                 },
                 _ => (),

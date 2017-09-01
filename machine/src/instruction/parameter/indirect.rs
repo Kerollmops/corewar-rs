@@ -14,9 +14,7 @@ use core::IDX_MOD;
 pub struct Indirect(i16);
 
 impl ConstMemSize for Indirect {
-    fn mem_size() -> usize {
-        IND_SIZE
-    }
+    const MEM_SIZE: usize = IND_SIZE;
 }
 
 impl GetValue for Indirect {
@@ -49,7 +47,7 @@ impl SetValue for Indirect {
 
 impl MemSize for Indirect {
     fn mem_size(&self) -> usize {
-        <Indirect as ConstMemSize>::mem_size()
+        Indirect::MEM_SIZE
     }
 }
 

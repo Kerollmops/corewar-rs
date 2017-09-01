@@ -12,9 +12,7 @@ use process::Context;
 pub struct Direct(i32);
 
 impl ConstMemSize for Direct {
-    fn mem_size() -> usize {
-        DIR_SIZE
-    }
+    const MEM_SIZE: usize = DIR_SIZE;
 }
 
 impl GetValue for Direct {
@@ -25,7 +23,7 @@ impl GetValue for Direct {
 
 impl MemSize for Direct {
     fn mem_size(&self) -> usize {
-        <Direct as ConstMemSize>::mem_size()
+        Direct::MEM_SIZE
     }
 }
 
@@ -44,5 +42,11 @@ impl<'a, R: Read> From<&'a mut R> for Direct {
 impl From<Direct> for i32 {
     fn from(direct: Direct) -> Self {
         direct.0
+    }
+}
+
+impl From<i32> for Direct {
+    fn from(value: i32) -> Self {
+        Direct(value)
     }
 }

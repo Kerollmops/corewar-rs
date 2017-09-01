@@ -1,17 +1,14 @@
 use pest::inputs::StringInput;
 use pest::iterators::Pair;
-use super::Rule;
+use super::{Rule, AsmPair};
 
 #[derive(Debug)]
 pub struct Property {
     pub name: String,
     pub value: Option<String>,
 }
-
-type PropPair = Pair<Rule, StringInput>;
-
-impl From<PropPair> for Property {
-    fn from(value: PropPair) -> Property {
+impl From<AsmPair> for Property {
+    fn from(value: AsmPair) -> Self {
         let mut value = value.into_inner();
 
         let name = value.by_ref().find(|p| p.as_rule() == Rule::prop_name).unwrap();

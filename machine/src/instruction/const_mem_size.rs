@@ -1,3 +1,3 @@
 pub trait ConstMemSize {
-    fn mem_size() -> usize;
+    const MEM_SIZE: usize;
 }
