@@ -1,3 +1,4 @@
+extern crate env_logger;
 extern crate asm;
 
 use std::process;
@@ -8,6 +9,8 @@ use std::path::Path;
 use asm::compile;
 
 fn status_main() -> i32 {
+    let _ = env_logger::init();
+
     if let Some(path) = args().skip(1).next() {
         let path = Path::new(&path);
         let mut out = Vec::new();

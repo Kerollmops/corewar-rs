@@ -22,18 +22,6 @@ pub enum Variable<T> {
     Incomplete(Label),
 }
 
-// impl<T> Variable<T> {
-//     pub fn as_complete(&self, label_offsets: &HashMap<Label, usize>) -> Result<T, LabelNotFound> {
-//         match *self {
-//             Variable::Complete(complete) => Ok(complete),
-//             Variable::Incomplete(ref label) => {
-//                 let offset = label_offsets.get(label).ok_or(LabelNotFound(label.clone()))?;
-//                 Ok(*offset)
-//             },
-//         }
-//     }
-// }
-
 impl<T: ConstMemSize> MemSize for Variable<T> {
     fn mem_size(&self) -> usize {
         T::MEM_SIZE
@@ -44,8 +32,8 @@ pub trait FromPair: Sized {
     fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError>;
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LabelNotFound(Label);
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct LabelNotFound(pub Label);
 
 pub trait AsComplete<T> {
     fn as_complete(&self, offset: usize, label_offsets: &HashMap<Label, usize>) -> Result<T, LabelNotFound>;
@@ -86,7 +74,7 @@ impl AsComplete<Direct> for Variable<Direct> {
             Variable::Complete(direct) => Ok(direct),
             Variable::Incomplete(ref label) => {
                 let label_offset = *label_offsets.get(label).ok_or(LabelNotFound(label.clone()))?;
-                let value = offset as isize - label_offset as isize;
+                let value = label_offset as isize - offset as isize;
                 Ok(Direct::from(value as i32))
             },
         }
@@ -128,7 +116,7 @@ impl AsComplete<Indirect> for Variable<Indirect> {
             Variable::Complete(indirect) => Ok(indirect),
             Variable::Incomplete(ref label) => {
                 let label_offset = *label_offsets.get(label).ok_or(LabelNotFound(label.clone()))?;
-                let value = offset as isize - label_offset as isize;
+                let value = label_offset as isize - offset as isize;
                 Ok(Indirect::from(value as i16))
             },
         }
