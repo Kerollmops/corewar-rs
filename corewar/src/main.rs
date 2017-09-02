@@ -1,11 +1,11 @@
 extern crate env_logger;
-extern crate machine;
+extern crate corewar;
 
 use std::env::args;
 use std::fs::File;
 use std::{io, process};
-use machine::Machine;
-use machine::champion::Champion;
+use corewar::Machine;
+use corewar::champion::Champion;
 
 fn failable_main() -> io::Result<()> {
     let _ = env_logger::init();

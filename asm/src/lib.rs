@@ -5,7 +5,7 @@
 extern crate pest;
 #[macro_use] extern crate pest_derive;
 extern crate core;
-extern crate machine;
+extern crate corewar;
 
 mod var_instr;
 mod property;
@@ -18,7 +18,7 @@ use std::convert::TryFrom;
 use pest::{Parser, Error};
 use pest::inputs::{StringInput, Span};
 use pest::iterators::Pair;
-use machine::instruction::mem_size::MemSize;
+use corewar::instruction::mem_size::MemSize;
 use core::{Header, COREWAR_EXEC_MAGIC, PROG_NAME_LENGTH, COMMENT_LENGTH};
 use var_instr::variable::LabelNotFound;
 use var_instr::VarInstr;

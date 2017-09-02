@@ -1,2 +1,2 @@
 [workspace]
-members = ["./core", "./asm", "./machine", "./corewar"]
+members = ["./core", "./asm", "./corewar"]

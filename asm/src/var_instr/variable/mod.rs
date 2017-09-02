@@ -11,9 +11,9 @@ pub use self::var_ind_reg::VarIndReg;
 use std::convert::TryFrom;
 use std::collections::HashMap;
 use pest::Error;
-use machine::instruction::mem_size::MemSize;
-use machine::instruction::const_mem_size::ConstMemSize;
-use machine::instruction::parameter::{Direct, Indirect, Register};
+use corewar::instruction::mem_size::MemSize;
+use corewar::instruction::const_mem_size::ConstMemSize;
+use corewar::instruction::parameter::{Direct, Indirect, Register};
 use label::Label;
 
 #[derive(Debug)]

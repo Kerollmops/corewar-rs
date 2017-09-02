@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use pest::Error;
 use var_instr::variable::{Variable, AsComplete, LabelNotFound};
 use var_instr::variable::FromPair;
-use machine::instruction::mem_size::MemSize;
-use machine::instruction::parameter::{Direct, Register, DirReg};
+use corewar::instruction::mem_size::MemSize;
+use corewar::instruction::parameter::{Direct, Register, DirReg};
 use label::Label;
 
 #[derive(Debug)]
