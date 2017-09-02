@@ -64,6 +64,12 @@ impl Machine {
         }
     }
 
+    pub fn last_living_champion(&self) -> Option<(i32, &Champion)> {
+        self.last_living_champion
+            .and_then(|id| self.champions.get(&id)
+            .map(|champ| (id, champ)))
+    }
+
     pub fn new_process(&mut self, context: Context) {
         let process = Process::new(context, &self.arena);
         trace!("push process {:?}", process);
@@ -84,6 +90,7 @@ pub struct CycleExecute<'a, W: 'a + Write> {
 pub struct CycleInfo {
     pub remaining_processes: usize,
     pub cycles_to_die: usize,
+    pub last_living_champion: Option<i32>,
 }
 
 impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
@@ -96,11 +103,11 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         let mut cycle_info = CycleInfo::default();
 
         self.machine.cycles += 1;
-        if self.machine.cycles == self.machine.cycles_to_die {
+        if self.machine.cycles >= self.machine.cycles_to_die {
             self.machine.cycle_checks += 1;
             processes.retain(|p| p.context.cycle_since_last_live < self.machine.cycles_to_die);
             if self.machine.number_of_lives >= NBR_LIVE || self.machine.cycle_checks >= MAX_CHECKS {
-                self.machine.cycles_to_die -= CYCLE_DELTA;
+                self.machine.cycles_to_die = self.machine.cycles_to_die.saturating_sub(CYCLE_DELTA);
                 self.machine.cycle_checks = 0;
             }
             self.machine.cycles = 0;
@@ -109,7 +116,7 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
 
         cycle_info.cycles_to_die = self.machine.cycles_to_die - self.machine.cycles;
 
-        for process in &mut processes {
+        for process in processes.iter_mut().rev() {
             let ref mut ctx = process.context;
             process.remaining_cycles -= 1;
             ctx.cycle_since_last_live += 1;
@@ -126,6 +133,10 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         }
         self.machine.processes.append(&mut processes);
         cycle_info.remaining_processes = self.machine.processes.len();
-        Some(cycle_info)
+        cycle_info.last_living_champion = self.machine.last_living_champion;
+
+        if !self.machine.processes.is_empty() {
+            Some(cycle_info)
+        } else { None }
     }
 }

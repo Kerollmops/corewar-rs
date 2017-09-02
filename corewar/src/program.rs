@@ -4,19 +4,19 @@ use std::error::Error;
 use core::CHAMP_MAX_SIZE;
 
 #[derive(Debug)]
-pub enum InvalidProgram {
-    TooLong,
+pub struct InvalidProgramSize {
+    size: usize,
 }
 
-impl Error for InvalidProgram {
+impl Error for InvalidProgramSize {
     fn description(&self) -> &str {
         "program size is too long"
     }
 }
 
-impl fmt::Display for InvalidProgram {
+impl fmt::Display for InvalidProgramSize {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.description())
+        write!(f, "{}, {} exceeds {}", self.description(), self.size, CHAMP_MAX_SIZE)
     }
 }
 
@@ -26,13 +26,13 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn new<R: Read>(program_size: usize, reader: &mut R) -> io::Result<Self> {
-        if program_size > CHAMP_MAX_SIZE {
-            use self::InvalidProgram::TooLong;
-            return Err(io::Error::new(io::ErrorKind::InvalidData, TooLong))
+    pub fn new<R: Read>(size: usize, reader: &mut R) -> io::Result<Self> {
+        if size > CHAMP_MAX_SIZE {
+            use self::InvalidProgramSize;
+            return Err(io::Error::new(io::ErrorKind::InvalidData, InvalidProgramSize { size }))
         }
 
-        let mut program = vec![0; program_size];
+        let mut program = vec![0; size];
         reader.read_exact(&mut program)?;
 
         Ok(Program { inner: program })
