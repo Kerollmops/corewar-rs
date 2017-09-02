@@ -1,14 +1,15 @@
 extern crate env_logger;
-extern crate core;
 extern crate machine;
 
 use std::env::args;
 use std::fs::File;
-use std::io;
+use std::{io, process};
 use machine::Machine;
 use machine::champion::Champion;
 
 fn failable_main() -> io::Result<()> {
+    let _ = env_logger::init();
+
     let enum_args = args().skip(1).enumerate();
     let champions: Result<_, io::Error> = enum_args.map(|(id, path)| {
             let mut file = File::open(&path)?;
@@ -28,9 +29,8 @@ fn failable_main() -> io::Result<()> {
 }
 
 fn main() {
-    let _ = env_logger::init();
-
     if let Err(err) = failable_main() {
-        eprintln!("{}", err)
+        eprintln!("{}", err);
+        process::exit(1);
     }
 }

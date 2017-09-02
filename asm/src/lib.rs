@@ -11,7 +11,7 @@ mod var_instr;
 mod property;
 mod label;
 
-use std::io::{Read, Write};
+use std::io::Write;
 use std::mem;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -36,12 +36,9 @@ type AsmPair = Pair<Rule, StringInput>;
 type AsmSpan = Span<StringInput>;
 pub type AsmError = Error<Rule, StringInput>;
 
-pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), AsmError> {
-
-    let mut content = String::new();
-    input.read_to_string(&mut content).unwrap(); // FIXME: don't unwrap
-
-    let mut pairs = AsmParser::parse_str(Rule::asm, &content)?;
+pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
+    let mut output = Vec::new();
+    let mut pairs = AsmParser::parse_str(Rule::asm, input)?;
 
     let mut properties = HashMap::new();
     let mut label_offsets = HashMap::new();
@@ -137,8 +134,8 @@ pub fn compile<R: Read, W: Write>(input: &mut R, output: &mut W) -> Result<(), A
     output.write_all(&mut header).unwrap();
 
     for instr in instrs {
-        instr.write_to(output);
+        instr.write_to(&mut output);
     }
 
-    Ok(())
+    Ok(output)
 }
