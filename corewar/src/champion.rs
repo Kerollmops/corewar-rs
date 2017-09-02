@@ -24,7 +24,7 @@ impl Champion {
         }
 
         fn into_str_nul_trimmed(slice: &[u8]) -> &str {
-            let name = unsafe { str::from_utf8_unchecked(&slice) };
+            let name = unsafe { str::from_utf8_unchecked(slice) };
             name.trim_right_matches(|c| c == '\0')
         }
 

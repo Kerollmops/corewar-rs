@@ -16,8 +16,9 @@ fn failable_main() -> io::Result<()> {
         return Err(Error::new(ErrorKind::Other, "Too many arguments."))
     }
 
-    let path = args.next().ok_or(Error::new(ErrorKind::Other,
-                        "Missing champion.s file to compile."))?;
+    let path = args.next().ok_or_else(|| {
+                    Error::new(ErrorKind::Other, "Missing champion.s file to compile.")
+                })?;
 
     let path = Path::new(&path);
     let mut file = File::open(path)?;

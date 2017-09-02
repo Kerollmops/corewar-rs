@@ -28,7 +28,7 @@ impl Machine {
         let mut processes = Vec::with_capacity(champions.len());
         let step = MEM_SIZE.checked_div(champions.len()).unwrap_or(0);
 
-        for (id, &Champion{ ref program, .. }) in champions.iter() {
+        for (id, &Champion{ ref program, .. }) in &champions {
             {
                 let mut writer = arena.write_to(arena_index);
                 io::copy(&mut program.as_slice(), &mut writer).unwrap();
@@ -117,12 +117,12 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         cycle_info.cycles_to_die = self.machine.cycles_to_die - self.machine.cycles;
 
         for process in processes.iter_mut().rev() {
-            let ref mut ctx = process.context;
+            let ctx = &mut process.context;
             process.remaining_cycles -= 1;
             ctx.cycle_since_last_live += 1;
 
             if process.remaining_cycles == 0 {
-                let ref mut instr = process.instruction;
+                let instr = &mut process.instruction;
                 instr.execute(&mut self.machine, ctx, &mut self.output);
                 trace!("execute {:?}", instr);
 

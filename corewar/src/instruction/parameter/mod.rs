@@ -78,10 +78,10 @@ impl ParamCode {
 
     pub fn param_type_of(&self, param: ParamNumber) -> Result<ParamType, InvalidParamCode> {
         let param_type = match param {
-            ParamNumber::First => (self.0 & 0b11000000) >> 6,
-            ParamNumber::Second => (self.0 & 0b00110000) >> 4,
-            ParamNumber::Third => (self.0 & 0b00001100) >> 2,
-            ParamNumber::Fourth => (self.0 & 0b00000011) >> 0,
+            ParamNumber::First => (self.0 & 0b1100_0000) >> 6,
+            ParamNumber::Second => (self.0 & 0b0011_0000) >> 4,
+            ParamNumber::Third => (self.0 & 0b0000_1100) >> 2,
+            ParamNumber::Fourth => (self.0 & 0b0000_0011) >> 0,
         };
         match param_type {
             0b10 => Ok(ParamType::Direct),
@@ -102,22 +102,22 @@ impl ParamCodeBuilder {
 
     pub fn first<P: ParamTypeOf>(self, param: &P) -> Self {
         let param_type = ParamTypeOf::param_type(param);
-        ParamCodeBuilder((self.0 & 0b00111111) | Into::<u8>::into(param_type) << 6)
+        ParamCodeBuilder((self.0 & 0b0011_1111) | Into::<u8>::into(param_type) << 6)
     }
 
     pub fn second<P: ParamTypeOf>(self, param: &P) -> Self {
         let param_type = ParamTypeOf::param_type(param);
-        ParamCodeBuilder((self.0 & 0b11001111) | Into::<u8>::into(param_type) << 4)
+        ParamCodeBuilder((self.0 & 0b1100_1111) | Into::<u8>::into(param_type) << 4)
     }
 
     pub fn third<P: ParamTypeOf>(self, param: &P) -> Self {
         let param_type = ParamTypeOf::param_type(param);
-        ParamCodeBuilder((self.0 & 0b11110011) | Into::<u8>::into(param_type) << 2)
+        ParamCodeBuilder((self.0 & 0b1111_0011) | Into::<u8>::into(param_type) << 2)
     }
 
     pub fn fourth<P: ParamTypeOf>(self, param: &P) -> Self {
         let param_type = ParamTypeOf::param_type(param);
-        ParamCodeBuilder((self.0 & 0b11111100) | Into::<u8>::into(param_type) << 0)
+        ParamCodeBuilder((self.0 & 0b1111_1100) | Into::<u8>::into(param_type) << 0)
     }
 }
 

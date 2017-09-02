@@ -73,7 +73,7 @@ impl AsComplete<Direct> for Variable<Direct> {
         match *self {
             Variable::Complete(direct) => Ok(direct),
             Variable::Incomplete(ref label) => {
-                let label_offset = *label_offsets.get(label).ok_or(LabelNotFound(label.clone()))?;
+                let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
                 Ok(Direct::from(value as i32))
             },
@@ -115,7 +115,7 @@ impl AsComplete<Indirect> for Variable<Indirect> {
         match *self {
             Variable::Complete(indirect) => Ok(indirect),
             Variable::Incomplete(ref label) => {
-                let label_offset = *label_offsets.get(label).ok_or(LabelNotFound(label.clone()))?;
+                let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
                 Ok(Indirect::from(value as i16))
             },

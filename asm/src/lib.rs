@@ -130,8 +130,8 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
         (&mut header.comment[..]).write_all(value_bytes).unwrap();
     }
 
-    let mut header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
-    output.write_all(&mut header).unwrap();
+    let header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
+    output.write_all(&header).unwrap();
 
     for instr in instrs {
         instr.write_to(&mut output);
