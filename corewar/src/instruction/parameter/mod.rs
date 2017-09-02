@@ -30,10 +30,10 @@ pub trait ParamTypeOf {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InvalidParamCode;
+pub struct InvalidParamCode(pub u8, ParamNumber);
 
 // TODO: make free-construction impossible: use a private field
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ParamType {
     Direct,
     Indirect,
@@ -50,7 +50,7 @@ impl From<ParamType> for u8 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ParamNumber {
     First,
     Second,
@@ -87,7 +87,7 @@ impl ParamCode {
             0b10 => Ok(ParamType::Direct),
             0b11 => Ok(ParamType::Indirect),
             0b01 => Ok(ParamType::Register),
-            _ => Err(InvalidParamCode)
+            _ => Err(InvalidParamCode(self.0, param))
         }
     }
 }
@@ -165,7 +165,7 @@ mod tests {
         fn is_invalid() {
             let mut param: &[u8] = &[0b00000000];
             let param = ParamCode::from(&mut param);
-            assert_eq!(param.param_type_of(ParamNumber::First).unwrap_err(), InvalidParamCode);
+            assert_eq!(param.param_type_of(ParamNumber::First).unwrap_err(), InvalidParamCode(0, ParamNumber::First));
         }
     }
 
@@ -197,7 +197,7 @@ mod tests {
         fn is_invalid() {
             let mut param: &[u8] = &[0b00000000];
             let param = ParamCode::from(&mut param);
-            assert_eq!(param.param_type_of(ParamNumber::Third).unwrap_err(), InvalidParamCode);
+            assert_eq!(param.param_type_of(ParamNumber::Third).unwrap_err(), InvalidParamCode(0, ParamNumber::Third));
         }
     }
 

@@ -38,7 +38,9 @@ impl Machine {
             let reg = Register::try_from(1).unwrap();
             context.registers[reg] = *id;
 
-            processes.push(Process::new(context, &arena));
+            let process = Process::new(context, &arena);
+            trace!("new process: {:?}", process);
+            processes.push(process);
 
             arena_index = arena_index.advance_by(step);
         }
