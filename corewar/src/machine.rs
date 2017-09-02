@@ -39,7 +39,7 @@ impl Machine {
             context.registers[reg] = *id;
 
             let process = Process::new(context, &arena);
-            trace!("new process: {:?}", process);
+            trace!("push process {:?}", process);
             processes.push(process);
 
             arena_index = arena_index.advance_by(step);
@@ -65,7 +65,9 @@ impl Machine {
     }
 
     pub fn new_process(&mut self, context: Context) {
-        self.processes.push(Process::new(context, &self.arena))
+        let process = Process::new(context, &self.arena);
+        trace!("push process {:?}", process);
+        self.processes.push(process)
     }
 
     pub fn cycle_execute<'a, W: Write>(&'a mut self, output: &'a mut W) -> CycleExecute<'a, W> {
@@ -78,15 +80,23 @@ pub struct CycleExecute<'a, W: 'a + Write> {
     output: &'a mut W,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CycleInfo {
+    pub remaining_processes: usize,
+    pub cycles_to_die: usize,
+}
+
 impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
-    type Item = ();
+    type Item = CycleInfo;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut processes = Vec::new();
         mem::swap(&mut processes, &mut self.machine.processes);
 
+        let mut cycle_info = CycleInfo::default();
+
         self.machine.cycles += 1;
-        if self.machine.cycles >= self.machine.cycles_to_die {
+        if self.machine.cycles == self.machine.cycles_to_die {
             self.machine.cycle_checks += 1;
             processes.retain(|p| p.context.cycle_since_last_live < self.machine.cycles_to_die);
             if self.machine.number_of_lives >= NBR_LIVE || self.machine.cycle_checks >= MAX_CHECKS {
@@ -97,6 +107,8 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
             self.machine.number_of_lives = 0;
         }
 
+        cycle_info.cycles_to_die = self.machine.cycles_to_die - self.machine.cycles;
+
         for process in &mut processes {
             let ref mut ctx = process.context;
             process.remaining_cycles -= 1;
@@ -104,15 +116,8 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
 
             if process.remaining_cycles == 0 {
                 let ref mut instr = process.instruction;
-
-                let from = ctx.pc; // TODO: remove
-
                 instr.execute(&mut self.machine, ctx, &mut self.output);
-
-                let to = ctx.pc; // TODO: remove
-
                 trace!("execute {:?}", instr);
-                trace!("move from {:?} to {:?}", from, to);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
                 *instr = Instruction::read_from(reader);
@@ -120,6 +125,7 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
             }
         }
         self.machine.processes.append(&mut processes);
-        Some(())
+        cycle_info.remaining_processes = self.machine.processes.len();
+        Some(cycle_info)
     }
 }

@@ -19,8 +19,8 @@ fn failable_main() -> io::Result<()> {
     let mut stdout = io::stdout();
     let mut machine = Machine::new(champions?);
 
-    for _ in machine.cycle_execute(&mut stdout).take(100) {
-        // println!("New cycle");
+    for cycle_info in machine.cycle_execute(&mut stdout).take(10_000) {
+        println!("{:#?}", cycle_info);
     }
 
     println!("{:?}", machine.arena);
