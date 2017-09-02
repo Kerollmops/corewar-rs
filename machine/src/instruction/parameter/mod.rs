@@ -44,8 +44,8 @@ impl From<ParamType> for u8 {
     fn from(param_type: ParamType) -> Self {
         match param_type {
             ParamType::Direct => 0b10,
-            ParamType::Indirect => 0b01,
-            ParamType::Register => 0b11,
+            ParamType::Indirect => 0b11,
+            ParamType::Register => 0b01,
         }
     }
 }
@@ -85,8 +85,8 @@ impl ParamCode {
         };
         match param_type {
             0b10 => Ok(ParamType::Direct),
-            0b01 => Ok(ParamType::Indirect),
-            0b11 => Ok(ParamType::Register),
+            0b11 => Ok(ParamType::Indirect),
+            0b01 => Ok(ParamType::Register),
             _ => Err(InvalidParamCode)
         }
     }
@@ -149,14 +149,14 @@ mod tests {
 
         #[test]
         fn is_indirect() {
-            let mut param: &[u8] = &[0b01000000];
+            let mut param: &[u8] = &[0b11000000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Indirect);
         }
 
         #[test]
         fn is_register() {
-            let mut param: &[u8] = &[0b11000000];
+            let mut param: &[u8] = &[0b01000000];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Register);
         }
@@ -181,14 +181,14 @@ mod tests {
 
         #[test]
         fn is_indirect() {
-            let mut param: &[u8] = &[0b00000100];
+            let mut param: &[u8] = &[0b00001100];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Indirect);
         }
 
         #[test]
         fn is_register() {
-            let mut param: &[u8] = &[0b00001100];
+            let mut param: &[u8] = &[0b00000100];
             let param = ParamCode::from(&mut param);
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Register);
         }
