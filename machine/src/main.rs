@@ -1,12 +1,12 @@
 extern crate env_logger;
-extern crate corewar;
+extern crate machine;
 
 use std::env::args;
 use std::fs::File;
 use std::net::TcpStream;
 use std::{io, process};
-use corewar::Machine;
-use corewar::champion::Champion;
+use machine::Machine;
+use machine::champion::Champion;
 
 fn failable_main() -> io::Result<()> {
     let _ = env_logger::init();
@@ -18,7 +18,8 @@ fn failable_main() -> io::Result<()> {
             Ok((id as i32, Champion::new(&mut file)?))
         }).collect();
 
-    let mut talk_stream = TcpStream::connect("127.0.0.1:14315").map(|x| Box::new(x) as Box<io::Write>)
+    let mut talk_stream = TcpStream::connect("127.0.0.1:14315")
+                                .map(|x| Box::new(x) as Box<io::Write>)
                                 .unwrap_or_else(|_| Box::new(io::sink()));
 
     let mut machine = Machine::new(champions?);
