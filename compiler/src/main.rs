@@ -1,12 +1,12 @@
 extern crate env_logger;
-extern crate asm;
+extern crate compiler;
 
 use std::process;
 use std::env::args;
 use std::fs::File;
 use std::io::{self, copy, Read, Error, ErrorKind};
 use std::path::Path;
-use asm::compile;
+use compiler::compile;
 
 fn failable_main() -> io::Result<()> {
     let _ = env_logger::init();
