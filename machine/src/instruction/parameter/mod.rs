@@ -22,6 +22,7 @@ pub use self::indirect::Indirect;
 pub use self::register::{Register, InvalidRegister};
 
 pub use self::register::Error as RegisterError;
+pub use self::dir_ind::Error as DirIndError;
 pub use self::dir_ind_reg::Error as DirIndRegError;
 pub use self::dir_reg::Error as DirRegError;
 pub use self::ind_reg::Error as IndRegError;
@@ -36,7 +37,7 @@ pub trait ParamTypeOf {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InvalidParamCode(pub u8, ParamNumber);
+pub struct InvalidParamType(ParamType);
 
 // TODO: make free-construction impossible: use a private field
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -63,6 +64,9 @@ pub enum ParamNumber {
     Third,
     Fourth,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InvalidParamCode(pub u8, ParamNumber);
 
 #[derive(Clone, Copy)]
 pub struct ParamCode(u8);
@@ -151,28 +155,28 @@ mod tests {
         #[test]
         fn is_direct() {
             let mut param: &[u8] = &[0b10000000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Direct);
         }
 
         #[test]
         fn is_indirect() {
             let mut param: &[u8] = &[0b11000000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Indirect);
         }
 
         #[test]
         fn is_register() {
             let mut param: &[u8] = &[0b01000000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap(), ParamType::Register);
         }
 
         #[test]
         fn is_invalid() {
             let mut param: &[u8] = &[0b00000000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::First).unwrap_err(), InvalidParamCode(0, ParamNumber::First));
         }
     }
@@ -183,28 +187,28 @@ mod tests {
         #[test]
         fn is_direct() {
             let mut param: &[u8] = &[0b00001000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Direct);
         }
 
         #[test]
         fn is_indirect() {
             let mut param: &[u8] = &[0b00001100];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Indirect);
         }
 
         #[test]
         fn is_register() {
             let mut param: &[u8] = &[0b00000100];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap(), ParamType::Register);
         }
 
         #[test]
         fn is_invalid() {
             let mut param: &[u8] = &[0b00000000];
-            let param = ParamCode::from(&mut param);
+            let param = ParamCode::try_from(&mut param).unwrap();
             assert_eq!(param.param_type_of(ParamNumber::Third).unwrap_err(), InvalidParamCode(0, ParamNumber::Third));
         }
     }

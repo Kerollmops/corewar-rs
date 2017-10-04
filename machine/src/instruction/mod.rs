@@ -48,30 +48,68 @@ pub enum Instruction {
 pub enum Error {
     Io(io::Error),
     InvalidCode(u8),
+    InvalidParamType(InvalidParamType),
     InvalidParamCode(InvalidParamCode),
-    InvalidParam,
+    InvalidRegister(InvalidRegister),
 }
 
 impl From<io::Error> for Error {
-    fn from(error: io::Error) -> Error {
+    fn from(error: io::Error) -> Self {
         Error::Io(error)
     }
 }
 
 impl From<InvalidParamCode> for Error {
-    fn from(error: InvalidParamCode) -> Error {
+    fn from(error: InvalidParamCode) -> Self {
         Error::InvalidParamCode(error)
     }
 }
 
-macro_rules! try_param {
-    ($t:ident, $p:expr) => (match $t::try_from($p) {
-        Ok(instr) => instr,
-        Err(err) => {
-            info!("wrong Param: {:?}", err);
-            return Ok(NoOp)
-        },
-    })
+impl From<DirIndRegError> for Error {
+    fn from(error: DirIndRegError) -> Self {
+        match error {
+            DirIndRegError::Io(e) => Error::Io(e),
+            DirIndRegError::InvalidRegister(invalid) => Error::InvalidRegister(invalid),
+        }
+    }
+}
+
+impl From<DirRegError> for Error {
+    fn from(error: DirRegError) -> Self {
+        match error {
+            DirRegError::Io(e) => Error::Io(e),
+            DirRegError::InvalidRegister(invalid) => Error::InvalidRegister(invalid),
+            DirRegError::InvalidParamType(invalid) => Error::InvalidParamType(invalid),
+        }
+    }
+}
+
+impl From<IndRegError> for Error {
+    fn from(error: IndRegError) -> Self {
+        match error {
+            IndRegError::Io(e) => Error::Io(e),
+            IndRegError::InvalidRegister(invalid) => Error::InvalidRegister(invalid),
+            IndRegError::InvalidParamType(invalid) => Error::InvalidParamType(invalid),
+        }
+    }
+}
+
+impl From<RegisterError> for Error {
+    fn from(error: RegisterError) -> Self {
+        match error {
+            RegisterError::Io(e) => Error::Io(e),
+            RegisterError::InvalidRegister(invalid) => Error::InvalidRegister(invalid),
+        }
+    }
+}
+
+impl From<DirIndError> for Error {
+    fn from(error: DirIndError) -> Self {
+        match error {
+            DirIndError::Io(e) => Error::Io(e),
+            DirIndError::InvalidParamType(invalid) => Error::InvalidParamType(invalid),
+        }
+    }
 }
 
 impl Instruction {
@@ -81,27 +119,27 @@ impl Instruction {
             2 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::First)?;
-                let dir_ind = try_param!(DirInd, (param_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind = DirInd::try_from((param_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
                 Load(dir_ind, reg)
             },
             3 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::Second)?;
-                let reg = try_param!(Register, &mut reader);
-                let ind_reg = try_param!(IndReg, (param_type, &mut reader));
+                let reg = Register::try_from(&mut reader)?;
+                let ind_reg = IndReg::try_from((param_type, &mut reader))?;
                 Store(reg, ind_reg)
             },
             4 => {
-                let reg_a = try_param!(Register, &mut reader);
-                let reg_b = try_param!(Register, &mut reader);
-                let reg_c = try_param!(Register, &mut reader);
+                let reg_a = Register::try_from(&mut reader)?;
+                let reg_b = Register::try_from(&mut reader)?;
+                let reg_c = Register::try_from(&mut reader)?;
                 Addition(reg_a, reg_b, reg_c)
             },
             5 => {
-                let reg_a = try_param!(Register, &mut reader);
-                let reg_b = try_param!(Register, &mut reader);
-                let reg_c = try_param!(Register, &mut reader);
+                let reg_a = Register::try_from(&mut reader)?;
+                let reg_b = Register::try_from(&mut reader)?;
+                let reg_c = Register::try_from(&mut reader)?;
                 Substraction(reg_a, reg_b, reg_c)
             },
             6 => {
@@ -109,9 +147,9 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
-                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
 
                 And(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
@@ -120,9 +158,9 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
-                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
 
                 Or(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
@@ -131,9 +169,9 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
-                let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
+                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
 
                 Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
@@ -143,9 +181,9 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
-                let dir_reg = try_param!(DirReg, (second_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader))?;
+                let dir_reg = DirReg::try_from((second_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
 
                 LoadIndex(dir_ind_reg, dir_reg, reg)
             },
@@ -154,9 +192,9 @@ impl Instruction {
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
                 let third_type = param_code.param_type_of(ParamNumber::Third)?;
 
-                let reg = try_param!(Register, &mut reader);
-                let dir_ind_reg = try_param!(DirIndReg, (second_type, &mut reader));
-                let dir_reg = try_param!(DirReg, (third_type, &mut reader));
+                let reg = Register::try_from(&mut reader)?;
+                let dir_ind_reg = DirIndReg::try_from((second_type, &mut reader))?;
+                let dir_reg = DirReg::try_from((third_type, &mut reader))?;
 
                 StoreIndex(reg, dir_ind_reg, dir_reg)
             },
@@ -164,8 +202,8 @@ impl Instruction {
             13 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
-                let dir_ind = try_param!(DirInd, (first_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind = DirInd::try_from((first_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
                 LongLoad(dir_ind, reg)
             },
             14 => {
@@ -173,16 +211,16 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
-                let dir_reg = try_param!(DirReg, (second_type, &mut reader));
-                let reg = try_param!(Register, &mut reader);
+                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader))?;
+                let dir_reg = DirReg::try_from((second_type, &mut reader))?;
+                let reg = Register::try_from(&mut reader)?;
 
                 LongLoadIndex(dir_ind_reg, dir_reg, reg)
             },
             15 => LongFork(Direct::try_from(&mut reader)?),
             16 => {
                 let _useless_param_code = ParamCode::try_from(&mut reader)?;
-                let reg = try_param!(Register, &mut reader);
+                let reg = Register::try_from(&mut reader)?;
                 Display(reg)
             },
             code => return Err(Error::InvalidCode(code)),

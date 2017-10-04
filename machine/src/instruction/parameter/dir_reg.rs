@@ -3,6 +3,7 @@ use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, RegisterError, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
+use instruction::parameter::InvalidParamType;
 use instruction::mem_size::MemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
@@ -12,7 +13,7 @@ use process::Context;
 #[derive(Debug)]
 pub enum Error {
     Io(io::Error),
-    InvalidParamType,
+    InvalidParamType(InvalidParamType),
     InvalidRegister(InvalidRegister)
 }
 
@@ -86,7 +87,7 @@ impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirReg {
         match param_type {
             ParamType::Direct => Ok(DirReg::Direct(Direct::try_from(reader)?)),
             ParamType::Register => Ok(DirReg::Register(Register::try_from(reader)?)),
-            _ => Err(Error::InvalidParamType),
+            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
         }
     }
 }

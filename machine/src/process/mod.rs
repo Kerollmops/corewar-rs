@@ -18,10 +18,8 @@ impl Process {
         let mut reader = arena.read_from(context.pc);
         let instruction = match Instruction::read_from(&mut reader) {
             Ok(instruction) => instruction,
-            Err(InstrError::InvalidCode(_)) => Instruction::NoOp,
-            Err(InstrError::InvalidParamCode(_)) => Instruction::NoOp,
-            Err(InstrError::InvalidParam) => Instruction::NoOp,
             Err(InstrError::Io(error)) => panic!("{}", error),
+            Err(_) => Instruction::NoOp,
         };
         Process {
             context: context,
