@@ -127,7 +127,7 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
                 trace!("execute {:?}", instr);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
-                *instr = Instruction::read_from(reader);
+                *instr = Instruction::read_from(reader).unwrap();
                 process.remaining_cycles = instr.cycle_cost();
             }
         }

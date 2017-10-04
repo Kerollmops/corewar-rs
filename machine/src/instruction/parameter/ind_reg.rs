@@ -1,7 +1,7 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
-use instruction::parameter::{Indirect, Register, InvalidRegister};
+use instruction::parameter::{Indirect, Register, RegisterError, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::mem_size::MemSize;
 use instruction::write_to::WriteTo;
@@ -9,10 +9,32 @@ use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
 
-#[derive(Debug, Clone, Copy)]
-pub enum InvalidIndReg {
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
     InvalidParamType,
-    InvalidRegister(u8),
+    InvalidRegister(InvalidRegister)
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::Io(error)
+    }
+}
+
+impl From<InvalidRegister> for Error {
+    fn from(error: InvalidRegister) -> Self {
+        Error::InvalidRegister(error)
+    }
+}
+
+impl From<RegisterError> for Error {
+    fn from(error: RegisterError) -> Self {
+        match error {
+            RegisterError::Io(e) => Error::Io(e),
+            RegisterError::InvalidRegister(invalid_reg) => Error::InvalidRegister(invalid_reg),
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -56,7 +78,7 @@ impl ParamTypeOf for IndReg {
 }
 
 impl WriteTo for IndReg {
-    fn write_to<W: Write>(&self, writer: &mut W) {
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         match *self {
             IndReg::Indirect(indirect) => indirect.write_to(writer),
             IndReg::Register(register) => register.write_to(writer),
@@ -65,16 +87,13 @@ impl WriteTo for IndReg {
 }
 
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for IndReg {
-    type Error = InvalidIndReg;
+    type Error = Error;
 
     fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
         match param_type {
-            ParamType::Indirect => Ok(IndReg::Indirect(Indirect::from(reader))),
-            ParamType::Register => match Register::try_from(reader) {
-                Ok(reg) => Ok(IndReg::Register(reg)),
-                Err(InvalidRegister(reg)) => Err(InvalidIndReg::InvalidRegister(reg)),
-            },
-            _ => Err(InvalidIndReg::InvalidParamType),
+            ParamType::Indirect => Ok(IndReg::Indirect(Indirect::try_from(reader)?)),
+            ParamType::Register => Ok(IndReg::Register(Register::try_from(reader)?)),
+            _ => Err(Error::InvalidParamType),
         }
     }
 }

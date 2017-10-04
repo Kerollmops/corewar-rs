@@ -1,4 +1,5 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
+use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::MemSize;
@@ -52,14 +53,17 @@ impl MemSize for Indirect {
 }
 
 impl WriteTo for Indirect {
-    fn write_to<W: Write>(&self, writer: &mut W) {
-        let _ = writer.write_i16::<BigEndian>(self.0);
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_i16::<BigEndian>(self.0)
     }
 }
 
-impl<'a, R: Read> From<&'a mut R> for Indirect {
-    fn from(reader: &'a mut R) -> Self {
-        Indirect(reader.read_i16::<BigEndian>().unwrap())
+impl<'a, R: Read> TryFrom<&'a mut R> for Indirect {
+    type Error = io::Error;
+
+    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
+        let value = reader.read_i16::<BigEndian>()?;
+        Ok(Indirect::from(value))
     }
 }
 

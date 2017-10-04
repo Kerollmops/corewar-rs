@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::convert::TryFrom;
 use std::fmt;
 use byteorder::{ReadBytesExt, WriteBytesExt};
@@ -11,8 +11,26 @@ use machine::Machine;
 use process::Context;
 use core::REG_MAX;
 
-#[derive(Debug, Clone, Copy)]
-pub struct InvalidRegister(pub u8);
+#[derive(Debug)]
+pub struct InvalidRegister(u8);
+
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    InvalidRegister(InvalidRegister),
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::Io(error)
+    }
+}
+
+impl From<InvalidRegister> for Error {
+    fn from(error: InvalidRegister) -> Self {
+        Error::InvalidRegister(error)
+    }
+}
 
 impl fmt::Display for InvalidRegister {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -40,19 +58,17 @@ impl MemSize for Register {
 }
 
 impl WriteTo for Register {
-    fn write_to<W: Write>(&self, writer: &mut W) {
-        let _ = writer.write_u8(self.0);
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u8(self.0)
     }
 }
 
 impl<'a, R: Read> TryFrom<&'a mut R> for Register {
-    type Error = InvalidRegister;
+    type Error = Error;
 
-    fn try_from(reader: &'a mut R) -> Result<Self, InvalidRegister> {
-        match reader.read_u8().unwrap() {
-            value @ 1...REG_MAX => Ok(Register(value)),
-            value => Err(InvalidRegister(value)),
-        }
+    fn try_from(reader: &'a mut R) -> Result<Self, Error> {
+        let value = reader.read_u8()?;
+        Ok(Register::try_from(value)?)
     }
 }
 

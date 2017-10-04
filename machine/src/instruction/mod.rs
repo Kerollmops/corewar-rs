@@ -5,7 +5,7 @@ mod get_value;
 mod set_value;
 mod write_to;
 
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
 use self::parameter::*;
@@ -44,17 +44,24 @@ pub enum Instruction {
     Display(Register),
 }
 
-macro_rules! try_param_type {
-    ($param_code:ident, $n:ident) => ({
-        use self::ParamNumber::*;
-        match $param_code.param_type_of($n) {
-            Ok(param_code) => param_code,
-            Err(err) => {
-                info!("wrong ParamCode: {:?}", err);
-                return NoOp
-            },
-        }
-    });
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    InvalidCode(u8),
+    InvalidParamCode(InvalidParamCode),
+    InvalidParam,
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Error {
+        Error::Io(error)
+    }
+}
+
+impl From<InvalidParamCode> for Error {
+    fn from(error: InvalidParamCode) -> Error {
+        Error::InvalidParamCode(error)
+    }
 }
 
 macro_rules! try_param {
@@ -62,25 +69,25 @@ macro_rules! try_param {
         Ok(instr) => instr,
         Err(err) => {
             info!("wrong Param: {:?}", err);
-            return NoOp
+            return Ok(NoOp)
         },
     })
 }
 
 impl Instruction {
-    pub fn read_from<R: Read>(mut reader: R) -> Self {
-        match reader.read_u8().unwrap() {
-            1 => Live(Direct::from(&mut reader)),
+    pub fn read_from<R: Read>(mut reader: R) -> Result<Self, Error> {
+        Ok(match reader.read_u8()? {
+            1 => Live(Direct::try_from(&mut reader)?),
             2 => {
-                let param_code = ParamCode::from(&mut reader);
-                let param_type = try_param_type!(param_code, First);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_type = param_code.param_type_of(ParamNumber::First)?;
                 let dir_ind = try_param!(DirInd, (param_type, &mut reader));
                 let reg = try_param!(Register, &mut reader);
                 Load(dir_ind, reg)
             },
             3 => {
-                let param_code = ParamCode::from(&mut reader);
-                let param_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_type = param_code.param_type_of(ParamNumber::Second)?;
                 let reg = try_param!(Register, &mut reader);
                 let ind_reg = try_param!(IndReg, (param_type, &mut reader));
                 Store(reg, ind_reg)
@@ -98,9 +105,9 @@ impl Instruction {
                 Substraction(reg_a, reg_b, reg_c)
             },
             6 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
-                let second_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
                 let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
                 let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
@@ -109,9 +116,9 @@ impl Instruction {
                 And(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             7 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
-                let second_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
                 let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
                 let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
@@ -120,9 +127,9 @@ impl Instruction {
                 Or(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             8 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
-                let second_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
                 let dir_ind_reg_a = try_param!(DirIndReg, (first_type, &mut reader));
                 let dir_ind_reg_b = try_param!(DirIndReg, (second_type, &mut reader));
@@ -130,11 +137,11 @@ impl Instruction {
 
                 Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
-            9 => ZJump(Direct::from(&mut reader)),
+            9 => ZJump(Direct::try_from(&mut reader)?),
             10 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
-                let second_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
                 let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
                 let dir_reg = try_param!(DirReg, (second_type, &mut reader));
@@ -143,9 +150,9 @@ impl Instruction {
                 LoadIndex(dir_ind_reg, dir_reg, reg)
             },
             11 => {
-                let param_code = ParamCode::from(&mut reader);
-                let second_type = try_param_type!(param_code, Second);
-                let third_type = try_param_type!(param_code, Third);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
+                let third_type = param_code.param_type_of(ParamNumber::Third)?;
 
                 let reg = try_param!(Register, &mut reader);
                 let dir_ind_reg = try_param!(DirIndReg, (second_type, &mut reader));
@@ -153,18 +160,18 @@ impl Instruction {
 
                 StoreIndex(reg, dir_ind_reg, dir_reg)
             },
-            12 => Fork(Direct::from(&mut reader)),
+            12 => Fork(Direct::try_from(&mut reader)?),
             13 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let dir_ind = try_param!(DirInd, (first_type, &mut reader));
                 let reg = try_param!(Register, &mut reader);
                 LongLoad(dir_ind, reg)
             },
             14 => {
-                let param_code = ParamCode::from(&mut reader);
-                let first_type = try_param_type!(param_code, First);
-                let second_type = try_param_type!(param_code, Second);
+                let param_code = ParamCode::try_from(&mut reader)?;
+                let first_type = param_code.param_type_of(ParamNumber::First)?;
+                let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
                 let dir_ind_reg = try_param!(DirIndReg, (first_type, &mut reader));
                 let dir_reg = try_param!(DirReg, (second_type, &mut reader));
@@ -172,102 +179,100 @@ impl Instruction {
 
                 LongLoadIndex(dir_ind_reg, dir_reg, reg)
             },
-            15 => LongFork(Direct::from(&mut reader)),
+            15 => LongFork(Direct::try_from(&mut reader)?),
             16 => {
-                let _useless_param_code = ParamCode::from(&mut reader);
+                let _useless_param_code = ParamCode::try_from(&mut reader)?;
                 let reg = try_param!(Register, &mut reader);
                 Display(reg)
             },
-            code => {
-                trace!("invalid code({}) gives a NoOp", code);
-                NoOp
-            },
-        }
+            code => return Err(Error::InvalidCode(code)),
+        })
     }
 
-    pub fn write_to<W: Write>(&self, writer: &mut W) {
-        let _ = writer.write(&[self.op_code()]);
+    pub fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write(&[self.op_code()])?;
         match *self {
             NoOp => (),
-            Live(dir) => { let _ = dir.write_to(writer); },
+            Live(dir) => dir.write_to(writer)?,
             Load(dir_ind, reg) => {
                 let code = ParamCode::builder().first(&dir_ind).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind.write_to(writer)?;
+                reg.write_to(writer)?;
             },
             Store(reg, ind_reg) => {
                 let code = ParamCode::builder().second(&ind_reg).build();
-                let _ = code.write_to(writer);
-                let _ = reg.write_to(writer);
-                let _ = ind_reg.write_to(writer);
+                code.write_to(writer)?;
+                reg.write_to(writer)?;
+                ind_reg.write_to(writer)?;
             },
             Addition(reg_a, reg_b, reg_c) => {
-                let _ = reg_a.write_to(writer);
-                let _ = reg_b.write_to(writer);
-                let _ = reg_c.write_to(writer);
+                reg_a.write_to(writer)?;
+                reg_b.write_to(writer)?;
+                reg_c.write_to(writer)?;
             },
             Substraction(reg_a, reg_b, reg_c) => {
-                let _ = reg_a.write_to(writer);
-                let _ = reg_b.write_to(writer);
-                let _ = reg_c.write_to(writer);
+                reg_a.write_to(writer)?;
+                reg_b.write_to(writer)?;
+                reg_c.write_to(writer)?;
             },
             And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind_reg_a.write_to(writer);
-                let _ = dir_ind_reg_b.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind_reg_a.write_to(writer)?;
+                dir_ind_reg_b.write_to(writer)?;
+                reg.write_to(writer)?;
             },
             Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind_reg_a.write_to(writer);
-                let _ = dir_ind_reg_b.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind_reg_a.write_to(writer)?;
+                dir_ind_reg_b.write_to(writer)?;
+                reg.write_to(writer)?;
             },
             Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind_reg_a.write_to(writer);
-                let _ = dir_ind_reg_b.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind_reg_a.write_to(writer)?;
+                dir_ind_reg_b.write_to(writer)?;
+                reg.write_to(writer)?;
             },
-            ZJump(dir) => { let _ = dir.write_to(writer); },
+            ZJump(dir) => dir.write_to(writer)?,
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind_reg.write_to(writer);
-                let _ = dir_reg.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind_reg.write_to(writer)?;
+                dir_reg.write_to(writer)?;
+                reg.write_to(writer)?;
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
                 let code = ParamCode::builder().second(&dir_ind_reg).third(&dir_reg).build();
-                let _ = code.write_to(writer);
-                let _ = reg.write_to(writer);
-                let _ = dir_ind_reg.write_to(writer);
-                let _ = dir_reg.write_to(writer);
+                code.write_to(writer)?;
+                reg.write_to(writer)?;
+                dir_ind_reg.write_to(writer)?;
+                dir_reg.write_to(writer)?;
             },
-            Fork(dir) => { let _ = dir.write_to(writer); },
+            Fork(dir) => dir.write_to(writer)?,
             LongLoad(dir_ind, reg) => {
                 let code = ParamCode::builder().first(&dir_ind).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind.write_to(writer)?;
+                reg.write_to(writer)?;
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build();
-                let _ = code.write_to(writer);
-                let _ = dir_ind_reg.write_to(writer);
-                let _ = dir_reg.write_to(writer);
-                let _ = reg.write_to(writer);
+                code.write_to(writer)?;
+                dir_ind_reg.write_to(writer)?;
+                dir_reg.write_to(writer)?;
+                reg.write_to(writer)?;
             },
-            LongFork(dir) => { let _ = dir.write_to(writer); },
+            LongFork(dir) => dir.write_to(writer)?,
             Display(reg) => {
-                let _ = ParamCode::null().write_to(writer);
-                let _ = reg.write_to(writer);
+                ParamCode::null().write_to(writer)?;
+                reg.write_to(writer)?;
             },
         }
+        Ok(())
     }
 
     pub fn op_code(&self) -> u8 {

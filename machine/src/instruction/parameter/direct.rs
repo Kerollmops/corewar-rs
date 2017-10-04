@@ -1,4 +1,5 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
+use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::DIR_SIZE;
 use instruction::mem_size::MemSize;
@@ -28,25 +29,28 @@ impl MemSize for Direct {
 }
 
 impl WriteTo for Direct {
-    fn write_to<W: Write>(&self, writer: &mut W) {
-        let _ = writer.write_i32::<BigEndian>(self.0);
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_i32::<BigEndian>(self.0)
     }
 }
 
-impl<'a, R: Read> From<&'a mut R> for Direct {
-    fn from(reader: &'a mut R) -> Self {
-        Direct(reader.read_i32::<BigEndian>().unwrap())
-    }
-}
+impl<'a, R: Read> TryFrom<&'a mut R> for Direct {
+    type Error = io::Error;
 
-impl From<Direct> for i32 {
-    fn from(direct: Direct) -> Self {
-        direct.0
+    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
+        let value = reader.read_i32::<BigEndian>()?;
+        Ok(Direct::from(value))
     }
 }
 
 impl From<i32> for Direct {
     fn from(value: i32) -> Self {
         Direct(value)
+    }
+}
+
+impl From<Direct> for i32 {
+    fn from(direct: Direct) -> Self {
+        direct.0
     }
 }

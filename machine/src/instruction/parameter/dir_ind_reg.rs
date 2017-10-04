@@ -1,14 +1,41 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
-use instruction::parameter::{Register, InvalidRegister};
+use instruction::parameter::{Register, RegisterError, InvalidRegister};
 use instruction::mem_size::MemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
+
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    InvalidRegister(InvalidRegister),
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::Io(error)
+    }
+}
+
+impl From<InvalidRegister> for Error {
+    fn from(error: InvalidRegister) -> Self {
+        Error::InvalidRegister(error)
+    }
+}
+
+impl From<RegisterError> for Error {
+    fn from(error: RegisterError) -> Self {
+        match error {
+            RegisterError::Io(e) => Error::Io(e),
+            RegisterError::InvalidRegister(invalid_reg) => Error::InvalidRegister(invalid_reg),
+        }
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirIndReg {
@@ -56,7 +83,7 @@ impl ParamTypeOf for DirIndReg {
 }
 
 impl WriteTo for DirIndReg {
-    fn write_to<W: Write>(&self, writer: &mut W) {
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         match *self {
             DirIndReg::Direct(direct) => direct.write_to(writer),
             DirIndReg::Indirect(indirect) => indirect.write_to(writer),
@@ -66,12 +93,12 @@ impl WriteTo for DirIndReg {
 }
 
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirIndReg {
-    type Error = InvalidRegister;
+    type Error = Error;
 
     fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
         match param_type {
-            ParamType::Direct => Ok(DirIndReg::Direct(Direct::from(reader))),
-            ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::from(reader))),
+            ParamType::Direct => Ok(DirIndReg::Direct(Direct::try_from(reader)?)),
+            ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::try_from(reader)?)),
             ParamType::Register => Ok(DirIndReg::Register(Register::try_from(reader)?)),
         }
     }

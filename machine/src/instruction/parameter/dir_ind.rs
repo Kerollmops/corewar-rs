@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
@@ -9,8 +9,17 @@ use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
 
-#[derive(Debug, Clone, Copy)]
-pub struct InvalidParamType;
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    InvalidParamType,
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::Io(error)
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DirInd {
@@ -44,7 +53,7 @@ impl MemSize for DirInd {
 }
 
 impl WriteTo for DirInd {
-    fn write_to<W: Write>(&self, writer: &mut W) {
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         match *self {
             DirInd::Direct(direct) => direct.write_to(writer),
             DirInd::Indirect(indirect) => indirect.write_to(writer),
@@ -62,13 +71,13 @@ impl ParamTypeOf for DirInd {
 }
 
 impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirInd {
-    type Error = InvalidParamType;
+    type Error = Error;
 
     fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
         match param_type {
-            ParamType::Direct => Ok(DirInd::Direct(Direct::from(reader))),
-            ParamType::Indirect => Ok(DirInd::Indirect(Indirect::from(reader))),
-            _ => Err(InvalidParamType),
+            ParamType::Direct => Ok(DirInd::Direct(Direct::try_from(reader)?)),
+            ParamType::Indirect => Ok(DirInd::Indirect(Indirect::try_from(reader)?)),
+            _ => Err(Error::InvalidParamType),
         }
     }
 }

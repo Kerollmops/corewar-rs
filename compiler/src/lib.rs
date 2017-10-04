@@ -1,5 +1,6 @@
 #![feature(try_from)]
 #![feature(const_fn)]
+#![feature(const_size_of)]
 
 #[macro_use] extern crate log;
 extern crate pest;
@@ -134,7 +135,7 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
     output.write_all(&header).unwrap();
 
     for instr in instrs {
-        instr.write_to(&mut output);
+        instr.write_to(&mut output).unwrap();
     }
 
     Ok(output)

@@ -1,4 +1,5 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
+use std::convert::TryFrom;
 use std::fmt;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::write_to::WriteTo;
@@ -19,6 +20,11 @@ mod ind_reg;
 pub use self::direct::Direct;
 pub use self::indirect::Indirect;
 pub use self::register::{Register, InvalidRegister};
+
+pub use self::register::Error as RegisterError;
+pub use self::dir_ind_reg::Error as DirIndRegError;
+pub use self::dir_reg::Error as DirRegError;
+pub use self::ind_reg::Error as IndRegError;
 
 pub use self::dir_ind::DirInd;
 pub use self::dir_ind_reg::DirIndReg;
@@ -92,6 +98,20 @@ impl ParamCode {
     }
 }
 
+impl WriteTo for ParamCode {
+    fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u8(self.0)
+    }
+}
+
+impl<'a, R: Read> TryFrom<&'a mut R> for ParamCode {
+    type Error = io::Error;
+
+    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
+        Ok(ParamCode(reader.read_u8()?))
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct ParamCodeBuilder(u8);
 
@@ -118,18 +138,6 @@ impl ParamCodeBuilder {
     pub fn fourth<P: ParamTypeOf>(self, param: &P) -> Self {
         let param_type = ParamTypeOf::param_type(param);
         ParamCodeBuilder((self.0 & 0b1111_1100) | Into::<u8>::into(param_type) << 0)
-    }
-}
-
-impl WriteTo for ParamCode {
-    fn write_to<W: Write>(&self, writer: &mut W) {
-        let _ = writer.write_u8(self.0);
-    }
-}
-
-impl<'a, R: Read> From<&'a mut R> for ParamCode {
-    fn from(reader: &'a mut R) -> Self {
-        ParamCode(reader.read_u8().unwrap())
     }
 }
 
