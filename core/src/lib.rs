@@ -1,22 +1,8 @@
-pub const IND_SIZE: usize = 2;
-pub const REG_SIZE: usize = 4;
-pub const DIR_SIZE: usize = REG_SIZE;
-
 pub const MAX_ARGS_NUMBER: usize = 4;
 pub const MAX_PLAYERS:     usize = 4;
 pub const MEM_SIZE:        usize = 6 * 1024;
 pub const IDX_MOD:         usize = MEM_SIZE / 8;
 pub const CHAMP_MAX_SIZE:  usize = MEM_SIZE / 6;
-
-pub const COMMENT_CHAR:    char = '#';
-pub const LABEL_CHAR:      char = ':';
-pub const DIRECT_CHAR:     char = '%';
-pub const SEPARATOR_CHAR:  char = ',';
-
-pub const LABEL_CHARS: &str = "abcdefghijklmnopqrstuvwxyz_0123456789";
-
-pub const NAME_CMD_STRING:    &str = ".name";
-pub const COMMENT_CMD_STRING: &str = ".comment";
 
 pub const REG_NUMBER: usize = 16;
 pub const REG_MAX:       u8 = REG_NUMBER as u8;
