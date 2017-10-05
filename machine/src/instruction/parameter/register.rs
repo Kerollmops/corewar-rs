@@ -9,7 +9,7 @@ use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
 use process::Context;
-use core::REG_MAX;
+pub use core::REG_MAX;
 
 #[derive(Debug)]
 pub struct InvalidRegister(u8);

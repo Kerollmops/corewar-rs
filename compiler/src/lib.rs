@@ -13,6 +13,7 @@ mod property;
 mod label;
 
 use std::io::Write;
+use std::borrow::Cow;
 use std::mem;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -96,17 +97,9 @@ pub fn parse_program(input: &str) -> Result<ParsedProgram, AsmError> {
 }
 
 pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
-    let mut output = Vec::new();
     let &ParsedProgram { ref file_pair, ref properties, ref instructions } = parsed_program;
 
-    let mut header = Header {
-        magic: COREWAR_EXEC_MAGIC.to_be(),
-        prog_name: [0u8; PROG_NAME_LENGTH + 1],
-        prog_size: (instructions.iter().map(|x| x.mem_size()).sum::<usize>() as u32).to_be(),
-        comment: [0u8; COMMENT_LENGTH + 1],
-    };
-
-    match properties.get("name") {
+    let name = match properties.get("name") {
         Some(&(_, Some(ref value))) if value.as_str().is_empty() => return Err(Error::CustomErrorSpan {
             message: "name property's value can't be empty".into(),
             span: value.clone(),
@@ -120,7 +113,7 @@ pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
             } else { value_len };
 
             let value_bytes = &value.as_str().as_bytes()[..len];
-            (&mut header.prog_name[..]).write_all(value_bytes).unwrap();
+            String::from_utf8_lossy(value_bytes)
         },
         Some(&(ref span, None)) => return Err(Error::CustomErrorPos {
             message: "name property need a value".into(),
@@ -130,26 +123,43 @@ pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
             message: "name property not found".into(),
             pos: file_pair.clone().into_span().start_pos(),
         }),
-    }
+    };
 
-    if let Some(&(_, Some(ref value))) = properties.get("comment") {
-        let max_comment_len = COMMENT_LENGTH;
-        let value_len = value.as_str().as_bytes().len();
-        let len = if max_comment_len < value_len {
-            eprintln!("comment property's value as been clamped to {} chars.", max_comment_len);
-            max_comment_len
-        } else { value_len };
+    let comment = match properties.get("comment") {
+        Some(&(_, Some(ref value))) => {
+            let max_comment_len = COMMENT_LENGTH;
+            let value_len = value.as_str().as_bytes().len();
+            let len = if max_comment_len < value_len {
+                eprintln!("comment property's value as been clamped to {} chars.", max_comment_len);
+                max_comment_len
+            } else { value_len };
 
-        let value_bytes = &value.as_str().as_bytes()[..len];
-        (&mut header.comment[..]).write_all(value_bytes).unwrap();
-    }
+            let value_bytes = &value.as_str().as_bytes()[..len];
+            String::from_utf8_lossy(value_bytes)
+        },
+        _ => Cow::Borrowed(""),
+    };
+
+    let mut output = Vec::with_capacity(mem::size_of::<Header>());
+    raw_compile(&name, &comment, &instructions, &mut output);
+    Ok(output)
+}
+
+pub fn raw_compile(name: &str, comment: &str, instrs: &[Instruction], output: &mut Vec<u8>) {
+    let mut header = Header {
+        magic: COREWAR_EXEC_MAGIC.to_be(),
+        prog_name: [0u8; PROG_NAME_LENGTH + 1],
+        prog_size: (instrs.iter().map(|x| x.mem_size()).sum::<usize>() as u32).to_be(),
+        comment: [0u8; COMMENT_LENGTH + 1],
+    };
+
+    (&mut header.prog_name[..]).write_all(name.as_bytes()).unwrap();
+    (&mut header.comment[..]).write_all(comment.as_bytes()).unwrap();
 
     let header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
     output.write_all(&header).unwrap();
 
-    for instr in instructions {
-        instr.write_to(&mut output).unwrap();
+    for instr in instrs {
+        instr.write_to(output).unwrap();
     }
-
-    Ok(output)
 }

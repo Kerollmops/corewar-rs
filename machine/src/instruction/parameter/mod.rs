@@ -19,7 +19,7 @@ mod ind_reg;
 
 pub use self::direct::Direct;
 pub use self::indirect::Indirect;
-pub use self::register::{Register, InvalidRegister};
+pub use self::register::{Register, InvalidRegister, REG_MAX};
 
 pub use self::register::Error as RegisterError;
 pub use self::dir_ind::Error as DirIndError;
