@@ -357,7 +357,7 @@ impl Instruction {
         }
     }
 
-    pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) {
+    pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) -> io::Result<()> {
         match *self {
             NoOp => context.pc = context.pc.advance_by(self.mem_size()),
             Live(champion_id) => {
@@ -470,10 +470,11 @@ impl Instruction {
             },
             Display(reg) => {
                 let value = context.registers[reg] as u8;
-                let _ = output.write(&[value]);
+                output.write_all(&[value])?;
                 context.pc = context.pc.advance_by(self.mem_size());
             },
         }
+        Ok(())
     }
 }
 

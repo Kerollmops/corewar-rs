@@ -20,6 +20,7 @@ use pest::{Parser, Error};
 use pest::inputs::{StringInput, Span};
 use pest::iterators::Pair;
 use machine::instruction::mem_size::MemSize;
+use machine::instruction::Instruction;
 use core::{Header, COREWAR_EXEC_MAGIC, PROG_NAME_LENGTH, COMMENT_LENGTH};
 use var_instr::variable::LabelNotFound;
 use var_instr::VarInstr;
@@ -37,8 +38,13 @@ type AsmPair = Pair<Rule, StringInput>;
 type AsmSpan = Span<StringInput>;
 pub type AsmError = Error<Rule, StringInput>;
 
-pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
-    let mut output = Vec::new();
+pub struct ParsedProgram {
+    file_pair: AsmPair,
+    properties: HashMap<String, (AsmSpan, Option<AsmSpan>)>,
+    instructions: Vec<Instruction>,
+}
+
+pub fn parse_program(input: &str) -> Result<ParsedProgram, AsmError> {
     let mut pairs = AsmParser::parse_str(Rule::asm, input)?;
 
     let mut properties = HashMap::new();
@@ -46,8 +52,8 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
     let mut var_instrs = Vec::new();
     let mut offset = 0;
 
-    let pair = pairs.next().unwrap();
-    for inner_pair in pair.clone().into_inner() {
+    let file_pair = pairs.next().unwrap();
+    for inner_pair in file_pair.clone().into_inner() {
         match inner_pair.as_rule() {
             Rule::props => for property_pair in inner_pair.into_inner() {
                 let Property{ name, value } = Property::from(property_pair);
@@ -71,13 +77,13 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
         };
     }
 
-    let mut instrs = Vec::with_capacity(var_instrs.len());
+    let mut instructions = Vec::with_capacity(var_instrs.len());
     let mut offset = 0;
     for var_instr in &var_instrs {
         match var_instr.as_instr(offset, &label_offsets) {
             Ok(instr) => {
                 offset += instr.mem_size();
-                instrs.push(instr);
+                instructions.push(instr);
             },
             Err(LabelNotFound(label)) => return Err(Error::CustomErrorSpan {
                 message: "label not found".into(),
@@ -86,10 +92,17 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
         }
     }
 
+    Ok(ParsedProgram { file_pair, properties, instructions })
+}
+
+pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
+    let mut output = Vec::new();
+    let &ParsedProgram { ref file_pair, ref properties, ref instructions } = parsed_program;
+
     let mut header = Header {
         magic: COREWAR_EXEC_MAGIC.to_be(),
         prog_name: [0u8; PROG_NAME_LENGTH + 1],
-        prog_size: (instrs.iter().map(|x| x.mem_size()).sum::<usize>() as u32).to_be(),
+        prog_size: (instructions.iter().map(|x| x.mem_size()).sum::<usize>() as u32).to_be(),
         comment: [0u8; COMMENT_LENGTH + 1],
     };
 
@@ -115,7 +128,7 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
         }),
         None => return Err(Error::CustomErrorPos {
             message: "name property not found".into(),
-            pos: pair.into_span().start_pos().clone(),
+            pos: file_pair.clone().into_span().start_pos(),
         }),
     }
 
@@ -134,7 +147,7 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
     let header: [u8; mem::size_of::<Header>()] = unsafe { mem::transmute(header) };
     output.write_all(&header).unwrap();
 
-    for instr in instrs {
+    for instr in instructions {
         instr.write_to(&mut output).unwrap();
     }
 

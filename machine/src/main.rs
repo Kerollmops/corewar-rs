@@ -23,13 +23,7 @@ fn failable_main() -> io::Result<()> {
                                 .unwrap_or_else(|_| Box::new(io::sink()));
 
     let mut machine = Machine::new(champions?);
-
-    for cycle_info in machine.cycle_execute(&mut talk_stream) {
-        println!("{:#?}", cycle_info);
-    }
-
-    println!("{:?}", machine.arena);
-
+    let _cycle_info = machine.cycle_execute(&mut talk_stream).last();
     match machine.last_living_champion() {
         Some((id, champ)) => println!("A winner is {}({}), {}", id, champ.name, champ.comment),
         None => println!("Sadly, no winner has been found"),

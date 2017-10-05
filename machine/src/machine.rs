@@ -5,6 +5,7 @@ use std::mem;
 use process::{Process, Context};
 use instruction::parameter::Register;
 use instruction::Instruction;
+use instruction::Error as InstrError;
 use champion::Champion;
 use arena::{Arena, ArenaIndex};
 use core::{MEM_SIZE, CYCLE_TO_DIE, CYCLE_DELTA, NBR_LIVE, MAX_CHECKS};
@@ -94,7 +95,7 @@ pub struct CycleInfo {
 }
 
 impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
-    type Item = CycleInfo;
+    type Item = io::Result<CycleInfo>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut processes = Vec::new();
@@ -123,11 +124,17 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
 
             if process.remaining_cycles == 0 {
                 let instr = &mut process.instruction;
-                instr.execute(&mut self.machine, ctx, &mut self.output);
+                if let Err(e) = instr.execute(&mut self.machine, ctx, &mut self.output) {
+                    return Some(Err(e))
+                }
                 trace!("execute {:?}", instr);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
-                *instr = Instruction::read_from(reader).unwrap();
+                *instr = match Instruction::read_from(reader) {
+                    Ok(instr) => instr,
+                    Err(InstrError::Io(e)) => return Some(Err(e)),
+                    Err(_) => Instruction::NoOp,
+                };
                 process.remaining_cycles = instr.cycle_cost();
             }
         }
@@ -136,7 +143,7 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         cycle_info.last_living_champion = self.machine.last_living_champion;
 
         if !self.machine.processes.is_empty() {
-            Some(cycle_info)
+            Some(Ok(cycle_info))
         } else { None }
     }
 }
