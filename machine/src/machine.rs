@@ -124,18 +124,21 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
 
             if process.remaining_cycles == 0 {
                 let instr = &mut process.instruction;
-                if let Err(e) = instr.execute(&mut self.machine, ctx, &mut self.output) {
-                    return Some(Err(e))
+                match *instr {
+                    Some(instr) => if let Err(e) = instr.execute(&mut self.machine, ctx, &mut self.output) {
+                        return Some(Err(e))
+                    },
+                    None => Instruction::execute_noop(ctx)
                 }
                 trace!("execute {:?}", instr);
 
                 let reader = self.machine.arena.read_from(ctx.pc);
                 *instr = match Instruction::read_from(reader) {
-                    Ok(instr) => instr,
+                    Ok(instr) => Some(instr),
                     Err(InstrError::Io(e)) => return Some(Err(e)),
-                    Err(_) => Instruction::NoOp,
+                    Err(_) => None,
                 };
-                process.remaining_cycles = instr.cycle_cost();
+                process.remaining_cycles = instr.map(|instr| instr.cycle_cost()).unwrap_or(1);
             }
         }
         self.machine.processes.append(&mut processes);

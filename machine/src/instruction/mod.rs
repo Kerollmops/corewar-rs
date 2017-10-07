@@ -26,7 +26,6 @@ use self::Instruction::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Instruction {
-    NoOp,
     Live(Direct),
     Load(DirInd, Register),
     Store(Register, IndReg),
@@ -233,7 +232,6 @@ impl Instruction {
     pub fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write(&[self.op_code()])?;
         match *self {
-            NoOp => (),
             Live(dir) => dir.write_to(writer)?,
             Load(dir_ind, reg) => {
                 let code = ParamCode::builder().first(&dir_ind).build();
@@ -318,7 +316,6 @@ impl Instruction {
 
     pub fn op_code(&self) -> u8 {
         match *self {
-            NoOp => 0,
             Live(_) => 1,
             Load(_, _) => 2,
             Store(_, _) => 3,
@@ -340,7 +337,6 @@ impl Instruction {
 
     pub fn cycle_cost(&self) -> usize {
         match *self {
-            NoOp => 1,
             Live(_) => 10,
             Load(_, _) => 5,
             Store(_, _) => 5,
@@ -362,7 +358,6 @@ impl Instruction {
 
     pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) -> io::Result<()> {
         match *self {
-            NoOp => context.pc = context.pc.advance_by(self.mem_size()),
             Live(champion_id) => {
                 context.cycle_since_last_live = 0;
                 machine.live_champion(champion_id.into());
@@ -479,12 +474,15 @@ impl Instruction {
         }
         Ok(())
     }
+
+    pub fn execute_noop(context: &mut Context) {
+        context.pc = context.pc.advance_by(1)
+    }
 }
 
 impl MemSize for Instruction {
     fn mem_size(&self) -> usize {
         let size = match *self {
-            NoOp => 0,
             Live(a) => a.mem_size(),
             Load(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
             Store(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),

@@ -9,22 +9,22 @@ use arena::Arena;
 pub struct Process {
     pub context: Context,
     pub remaining_cycles: usize,
-    pub instruction: Instruction,
+    pub instruction: Option<Instruction>,
 }
 
 // FIXME: Add logging here !
 impl Process {
     pub fn new(context: Context, arena: &Arena) -> Self {
         let mut reader = arena.read_from(context.pc);
-        let instruction = match Instruction::read_from(&mut reader) {
-            Ok(instruction) => instruction,
+        let maybe_instr = match Instruction::read_from(&mut reader) {
+            Ok(instruction) => Some(instruction),
             Err(InstrError::Io(error)) => panic!("{}", error),
-            Err(_) => Instruction::NoOp,
+            Err(_) => None,
         };
         Process {
             context: context,
-            remaining_cycles: instruction.cycle_cost(),
-            instruction: instruction,
+            remaining_cycles: maybe_instr.map(|instr| instr.cycle_cost()).unwrap_or(1),
+            instruction: maybe_instr,
         }
     }
 }
