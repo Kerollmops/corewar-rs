@@ -113,3 +113,13 @@ impl fmt::Debug for DirIndReg {
         }
     }
 }
+
+impl fmt::Display for DirIndReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirIndReg::Direct(dir) => dir.fmt(f),
+            DirIndReg::Indirect(ind) => ind.fmt(f),
+            DirIndReg::Register(reg) => reg.fmt(f),
+        }
+    }
+}

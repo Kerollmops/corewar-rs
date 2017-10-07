@@ -91,3 +91,12 @@ impl fmt::Debug for DirInd {
         }
     }
 }
+
+impl fmt::Display for DirInd {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirInd::Direct(dir) => dir.fmt(f),
+            DirInd::Indirect(ind) => ind.fmt(f),
+        }
+    }
+}

@@ -100,3 +100,12 @@ impl fmt::Debug for DirReg {
         }
     }
 }
+
+impl fmt::Display for DirReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DirReg::Direct(dir) => dir.fmt(f),
+            DirReg::Register(reg) => reg.fmt(f),
+        }
+    }
+}

@@ -6,6 +6,7 @@ mod set_value;
 mod write_to;
 
 use std::io::{self, Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
 use instruction::const_mem_size::ConstMemSize;
@@ -501,5 +502,28 @@ impl MemSize for Instruction {
             Display(a) => PARAM_CODE_SIZE + a.mem_size(),
         };
         OP_CODE_SIZE + size
+    }
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Live(dir) => write!(f, "live {}", dir),
+            Load(dir_ind, reg) => write!(f, "ld {}, {}", dir_ind, reg),
+            Store(reg, ind_reg) => write!(f, "st {}, {}", reg, ind_reg),
+            Addition(reg_a, reg_b, reg_c) => write!(f, "add {}, {}, {}", reg_a, reg_b, reg_c),
+            Substraction(reg_a, reg_b, reg_c) => write!(f, "sub {}, {}, {}", reg_a, reg_b, reg_c),
+            And(dir_ind_reg_a, dir_ind_reg_b, reg) => write!(f, "and {}, {}, {}", dir_ind_reg_a, dir_ind_reg_b, reg),
+            Or(dir_ind_reg_a, dir_ind_reg_b, reg) => write!(f, "or {}, {}, {}", dir_ind_reg_a, dir_ind_reg_b, reg),
+            Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => write!(f, "xor {}, {}, {}", dir_ind_reg_a, dir_ind_reg_b, reg),
+            ZJump(dir) => write!(f, "zjmp {}", dir),
+            LoadIndex(dir_ind_reg, dir_reg, reg) => write!(f, "ldi {}, {}, {}", dir_ind_reg, dir_reg, reg),
+            StoreIndex(reg, dir_ind_reg, dir_reg) => write!(f, "sti {}, {}, {}", reg, dir_ind_reg, dir_reg),
+            Fork(dir) => write!(f, "fork {}", dir),
+            LongLoad(dir_ind, reg) => write!(f, "lld {}, {}", dir_ind, reg),
+            LongLoadIndex(dir_ind_reg, dir_reg, reg) => write!(f, "lldi {}, {}, {}", dir_ind_reg, dir_reg, reg),
+            LongFork(dir) => write!(f, "lfork {}", dir),
+            Display(reg) => write!(f, "aff {}", reg),
+        }
     }
 }

@@ -107,3 +107,12 @@ impl fmt::Debug for IndReg {
         }
     }
 }
+
+impl fmt::Display for IndReg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            IndReg::Indirect(ind) => ind.fmt(f),
+            IndReg::Register(reg) => reg.fmt(f),
+        }
+    }
+}

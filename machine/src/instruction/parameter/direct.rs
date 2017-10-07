@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::DIR_SIZE;
@@ -58,5 +59,11 @@ impl From<i32> for Direct {
 impl From<Direct> for i32 {
     fn from(direct: Direct) -> Self {
         direct.0
+    }
+}
+
+impl fmt::Display for Direct {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "%{}", self.0)
     }
 }

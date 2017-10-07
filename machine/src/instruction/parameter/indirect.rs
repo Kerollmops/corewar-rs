@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
@@ -76,5 +77,11 @@ impl<'a, R: Read> TryFrom<&'a mut R> for Indirect {
 impl From<i16> for Indirect {
     fn from(value: i16) -> Self {
         Indirect(value)
+    }
+}
+
+impl fmt::Display for Indirect {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

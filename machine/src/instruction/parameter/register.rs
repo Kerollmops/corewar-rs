@@ -1,6 +1,6 @@
 use std::io::{self, Read, Write};
-use std::convert::TryFrom;
 use std::fmt;
+use std::convert::TryFrom;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::MemSize;
@@ -92,5 +92,11 @@ impl TryFrom<u8> for Register {
 impl From<Register> for u8 {
     fn from(reg: Register) -> Self {
         reg.0
+    }
+}
+
+impl fmt::Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "r{}", self.0)
     }
 }
