@@ -3,7 +3,7 @@ use std::{mem, str};
 use core::{Header, COREWAR_EXEC_MAGIC};
 use program::Program;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Champion {
     pub name: String,
     pub comment: String,

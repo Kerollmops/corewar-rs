@@ -23,7 +23,7 @@ pub const PARAM_CODE_SIZE:  usize = 1;
 
 use self::Instruction::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Instruction {
     NoOp,
     Live(Direct),

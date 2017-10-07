@@ -20,7 +20,7 @@ impl fmt::Display for InvalidProgramSize {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Program {
     inner: Vec<u8>,
 }
