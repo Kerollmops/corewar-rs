@@ -6,7 +6,7 @@ use std::env::args;
 use std::fs::File;
 use std::io::{self, copy, Read, Error, ErrorKind};
 use std::path::Path;
-use compiler::{parse_program, compile};
+use compiler::compile;
 
 fn failable_main() -> Result<(), Box<error::Error>> {
     let _ = env_logger::init();
@@ -29,8 +29,7 @@ fn failable_main() -> Result<(), Box<error::Error>> {
         buf
     };
 
-    let parsed_program = parse_program(&input).map_err(|e| Box::new(io::Error::new(ErrorKind::Other, e.to_string())))?;
-    compile(&parsed_program).map_err(|e| Box::new(io::Error::new(ErrorKind::Other, e.to_string())))
+    compile(&input).map_err(|e| Box::new(io::Error::new(ErrorKind::Other, e.to_string())))
         .and_then(|out| {
             let path = path.with_extension("cor");
             File::create(&path)

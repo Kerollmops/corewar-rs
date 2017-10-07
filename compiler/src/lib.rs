@@ -45,6 +45,15 @@ pub struct ParsedProgram {
     instructions: Vec<Instruction>,
 }
 
+pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
+    let parsed_program = parse_program(input)?;
+    let (name, comment, instrs) = destruct_program(&parsed_program)?;
+
+    let mut output = Vec::with_capacity(mem::size_of::<Header>());
+    raw_compile(&name, &comment, &instrs, &mut output);
+    Ok(output)
+}
+
 pub fn parse_program(input: &str) -> Result<ParsedProgram, AsmError> {
     let mut pairs = AsmParser::parse_str(Rule::asm, input)?;
 
@@ -96,7 +105,7 @@ pub fn parse_program(input: &str) -> Result<ParsedProgram, AsmError> {
     Ok(ParsedProgram { file_pair, properties, instructions })
 }
 
-pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
+pub fn destruct_program(parsed_program: &ParsedProgram) -> Result<(String, String, Vec<Instruction>), AsmError> {
     let &ParsedProgram { ref file_pair, ref properties, ref instructions } = parsed_program;
 
     let name = match properties.get("name") {
@@ -140,9 +149,7 @@ pub fn compile(parsed_program: &ParsedProgram) -> Result<Vec<u8>, AsmError> {
         _ => Cow::Borrowed(""),
     };
 
-    let mut output = Vec::with_capacity(mem::size_of::<Header>());
-    raw_compile(&name, &comment, &instructions, &mut output);
-    Ok(output)
+    Ok((name.into(), comment.into(), instructions.clone()))
 }
 
 pub fn raw_compile(name: &str, comment: &str, instrs: &[Instruction], output: &mut Vec<u8>) {
