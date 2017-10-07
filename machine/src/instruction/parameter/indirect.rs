@@ -14,6 +14,12 @@ use core::IDX_MOD;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Indirect(i16);
 
+impl Indirect {
+    pub fn value(&self) -> i16 {
+        self.0
+    }
+}
+
 impl ConstMemSize for Indirect {
     const MEM_SIZE: usize = IND_SIZE;
 }

@@ -12,6 +12,12 @@ use process::Context;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direct(i32);
 
+impl Direct {
+    pub fn value(&self) -> i32 {
+        self.0
+    }
+}
+
 impl ConstMemSize for Direct {
     const MEM_SIZE: usize = DIR_SIZE;
 }

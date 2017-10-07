@@ -41,6 +41,12 @@ impl fmt::Display for InvalidRegister {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Register(u8);
 
+impl Register {
+    pub fn value(&self) -> u8 {
+        self.0
+    }
+}
+
 impl ConstMemSize for Register {
     const MEM_SIZE: usize = REG_SIZE;
 }
