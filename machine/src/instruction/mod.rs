@@ -8,6 +8,7 @@ mod write_to;
 use std::io::{self, Read, Write};
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
+use instruction::const_mem_size::ConstMemSize;
 use self::parameter::*;
 use self::mem_size::MemSize;
 use self::write_to::WriteTo;
@@ -113,6 +114,8 @@ impl From<DirIndError> for Error {
 }
 
 impl Instruction {
+    pub const SMALLEST_INSTR_SIZE: usize = OP_CODE_SIZE + Register::MEM_SIZE;
+
     pub fn read_from<R: Read>(mut reader: R) -> Result<Self, Error> {
         Ok(match reader.read_u8()? {
             1 => Live(Direct::try_from(&mut reader)?),
