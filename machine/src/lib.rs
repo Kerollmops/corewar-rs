@@ -5,7 +5,7 @@
 
 extern crate byteorder;
 #[macro_use] extern crate log;
-extern crate core;
+pub extern crate core;
 
 mod machine;
 pub mod champion;
