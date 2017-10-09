@@ -3,8 +3,7 @@ use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::DIR_SIZE;
-use instruction::mem_size::MemSize;
-use instruction::const_mem_size::ConstMemSize;
+use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
@@ -26,12 +25,6 @@ impl ConstMemSize for Direct {
 impl GetValue for Direct {
     fn get_value(&self, _vm: &Machine, _context: &Context) -> i32 {
         self.0
-    }
-}
-
-impl MemSize for Direct {
-    fn mem_size(&self) -> usize {
-        Direct::MEM_SIZE
     }
 }
 

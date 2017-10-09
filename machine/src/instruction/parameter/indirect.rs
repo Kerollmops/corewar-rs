@@ -3,8 +3,7 @@ use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
-use instruction::mem_size::MemSize;
-use instruction::const_mem_size::ConstMemSize;
+use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use instruction::set_value::SetValue;
@@ -50,12 +49,6 @@ impl SetValue for Indirect {
         let addr = context.pc.move_by(self.0 as isize);
         let mut writer = vm.arena.write_to(addr);
         writer.write_i32::<BigEndian>(value).unwrap();
-    }
-}
-
-impl MemSize for Indirect {
-    fn mem_size(&self) -> usize {
-        Indirect::MEM_SIZE
     }
 }
 

@@ -3,8 +3,7 @@ use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::parameter::REG_SIZE;
-use instruction::mem_size::MemSize;
-use instruction::const_mem_size::ConstMemSize;
+use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
 use instruction::get_value::GetValue;
 use machine::Machine;
@@ -54,12 +53,6 @@ impl ConstMemSize for Register {
 impl GetValue for Register {
     fn get_value(&self, _vm: &Machine, context: &Context) -> i32 {
         context.registers[*self]
-    }
-}
-
-impl MemSize for Register {
-    fn mem_size(&self) -> usize {
-        Register::MEM_SIZE
     }
 }
 

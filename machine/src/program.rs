@@ -28,7 +28,6 @@ pub struct Program {
 impl Program {
     pub fn new<R: Read>(size: usize, reader: &mut R) -> io::Result<Self> {
         if size > CHAMP_MAX_SIZE {
-            use self::InvalidProgramSize;
             return Err(io::Error::new(io::ErrorKind::InvalidData, InvalidProgramSize { size }))
         }
 

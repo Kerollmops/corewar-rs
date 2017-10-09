@@ -11,8 +11,7 @@ pub use self::var_ind_reg::VarIndReg;
 use std::convert::TryFrom;
 use std::collections::HashMap;
 use pest::Error;
-use machine::instruction::mem_size::MemSize;
-use machine::instruction::const_mem_size::ConstMemSize;
+use machine::instruction::mem_size::{MemSize, ConstMemSize};
 use machine::instruction::parameter::{Direct, Indirect, Register};
 use label::Label;
 
@@ -24,7 +23,7 @@ pub enum Variable<T> {
 
 impl<T: ConstMemSize> MemSize for Variable<T> {
     fn mem_size(&self) -> usize {
-        T::MEM_SIZE
+        <T as ConstMemSize>::MEM_SIZE
     }
 }
 

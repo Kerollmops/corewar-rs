@@ -1,5 +1,4 @@
 pub mod parameter;
-pub mod const_mem_size;
 pub mod mem_size;
 mod get_value;
 mod set_value;
@@ -9,7 +8,7 @@ use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
-use instruction::const_mem_size::ConstMemSize;
+use instruction::mem_size::ConstMemSize;
 use self::parameter::*;
 use self::mem_size::MemSize;
 use self::write_to::WriteTo;
