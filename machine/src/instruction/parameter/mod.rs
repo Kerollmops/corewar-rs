@@ -6,31 +6,44 @@ use instruction::write_to::WriteTo;
 
 const REG_SIZE: usize = 1;
 const DIR_SIZE: usize = 4;
+const ALT_DIR_SIZE: usize = DIR_SIZE / 2;
 const IND_SIZE: usize = 2;
 
 mod direct;
 mod indirect;
 mod register;
 
+mod alt_direct;
+
 mod dir_ind;
 mod dir_ind_reg;
 mod dir_reg;
 mod ind_reg;
 
+mod alt_dir_ind;
+mod alt_dir_ind_reg;
+mod alt_dir_reg;
+
 pub use self::direct::Direct;
 pub use self::indirect::Indirect;
 pub use self::register::{Register, InvalidRegister, REG_MAX};
+
+pub use self::alt_direct::AltDirect;
+
+pub use self::dir_ind::DirInd;
+pub use self::dir_ind_reg::DirIndReg;
+pub use self::dir_reg::DirReg;
+pub use self::ind_reg::IndReg;
+
+pub use self::alt_dir_ind::AltDirInd;
+pub use self::alt_dir_ind_reg::AltDirIndReg;
+pub use self::alt_dir_reg::AltDirReg;
 
 pub use self::register::Error as RegisterError;
 pub use self::dir_ind::Error as DirIndError;
 pub use self::dir_ind_reg::Error as DirIndRegError;
 pub use self::dir_reg::Error as DirRegError;
 pub use self::ind_reg::Error as IndRegError;
-
-pub use self::dir_ind::DirInd;
-pub use self::dir_ind_reg::DirIndReg;
-pub use self::dir_reg::DirReg;
-pub use self::ind_reg::IndReg;
 
 pub trait ParamTypeOf {
     fn param_type(&self) -> ParamType;

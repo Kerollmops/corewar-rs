@@ -88,7 +88,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's only parameter is a `Direct` value.
-    ZJump(Direct), // FIXME: alt_direct
+    ZJump(AltDirect), // FIXME: alt_direct
 
     /// Sums the first two parameters and reads at this computed address and
     /// stores the value to the third parameter.
@@ -98,7 +98,7 @@ pub enum Instruction {
     /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
     /// the second is a `Direct` or a `Register` and
     /// the third one is a `Register`.
-    LoadIndex(DirIndReg, DirReg, Register), // FIXME: alt_direct
+    LoadIndex(AltDirIndReg, AltDirReg, Register), // FIXME: alt_direct
 
     /// Sums the second and third parameters and
     /// stores the first argument to the computed address.
@@ -108,7 +108,7 @@ pub enum Instruction {
     /// The first argument is a `Register`,
     /// the second is a `Direct`, an `Indirect` or a `Register` and
     /// the last one is a `Direct` or a `Register`.
-    StoreIndex(Register, DirIndReg, DirReg), // FIXME: alt_direct
+    StoreIndex(Register, AltDirIndReg, AltDirReg), // FIXME: alt_direct
 
     /// Create a new process that inherit of the different states of the father.
     ///
@@ -117,7 +117,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's first argument is a `Direct`.
-    Fork(Direct), // FIXME: alt_direct
+    Fork(AltDirect), // FIXME: alt_direct
 
     /// Loads the first parameter to the register specified as second parameter.
     ///
@@ -137,7 +137,7 @@ pub enum Instruction {
     /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
     /// the second is a `Direct` or a `Register` and
     /// the third one is a `Register`.
-    LongLoadIndex(DirIndReg, DirReg, Register), // FIXME: alt_direct
+    LongLoadIndex(AltDirIndReg, AltDirReg, Register), // FIXME: alt_direct
 
     /// Create a new process that inherit of the different states of the father.
     ///
@@ -146,7 +146,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's first argument is a `Direct`.
-    LongFork(Direct), // FIXME: alt_direct
+    LongFork(AltDirect), // FIXME: alt_direct
 
     /// Output the first argument % 256 to standard output.
     ///
@@ -291,17 +291,17 @@ impl Instruction {
 
                 Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
-            9 => ZJump(Direct::try_from(&mut reader)?),
+            9 => ZJump(AltDirect::try_from(&mut reader)?),
             10 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader))?;
-                let dir_reg = DirReg::try_from((second_type, &mut reader))?;
+                let alt_dir_ind_reg = AltDirIndReg::try_from((first_type, &mut reader))?;
+                let alt_dir_reg = AltDirReg::try_from((second_type, &mut reader))?;
                 let reg = Register::try_from(&mut reader)?;
 
-                LoadIndex(dir_ind_reg, dir_reg, reg)
+                LoadIndex(alt_dir_ind_reg, alt_dir_reg, reg)
             },
             11 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
@@ -309,12 +309,12 @@ impl Instruction {
                 let third_type = param_code.param_type_of(ParamNumber::Third)?;
 
                 let reg = Register::try_from(&mut reader)?;
-                let dir_ind_reg = DirIndReg::try_from((second_type, &mut reader))?;
-                let dir_reg = DirReg::try_from((third_type, &mut reader))?;
+                let alt_dir_ind_reg = AltDirIndReg::try_from((second_type, &mut reader))?;
+                let alt_dir_reg = AltDirReg::try_from((third_type, &mut reader))?;
 
-                StoreIndex(reg, dir_ind_reg, dir_reg)
+                StoreIndex(reg, alt_dir_ind_reg, alt_dir_reg)
             },
-            12 => Fork(Direct::try_from(&mut reader)?),
+            12 => Fork(AltDirect::try_from(&mut reader)?),
             13 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
@@ -327,13 +327,13 @@ impl Instruction {
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg = DirIndReg::try_from((first_type, &mut reader))?;
-                let dir_reg = DirReg::try_from((second_type, &mut reader))?;
+                let alt_dir_ind_reg = AltDirIndReg::try_from((first_type, &mut reader))?;
+                let alt_dir_reg = AltDirReg::try_from((second_type, &mut reader))?;
                 let reg = Register::try_from(&mut reader)?;
 
-                LongLoadIndex(dir_ind_reg, dir_reg, reg)
+                LongLoadIndex(alt_dir_ind_reg, alt_dir_reg, reg)
             },
-            15 => LongFork(Direct::try_from(&mut reader)?),
+            15 => LongFork(AltDirect::try_from(&mut reader)?),
             16 => {
                 let _useless_param_code = ParamCode::try_from(&mut reader)?;
                 let reg = Register::try_from(&mut reader)?;
@@ -533,8 +533,8 @@ impl Instruction {
                 context.carry = { result == 0 };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            ZJump(dir) => if context.carry {
-                let value: i32 = dir.into();
+            ZJump(alt_dir) => if context.carry {
+                let value: i16 = alt_dir.into();
                 context.pc = context.pc.move_by(value as isize % IDX_MOD as isize);
             } else {
                 context.pc = context.pc.advance_by(self.mem_size());
@@ -554,8 +554,8 @@ impl Instruction {
                 addr.set_value(value, machine, context);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            Fork(dir) => {
-                let value: i32 = dir.into();
+            Fork(alt_dir) => {
+                let value: i16 = alt_dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc = fork.pc.move_by(value as isize % IDX_MOD as isize);
                 machine.new_process(fork);
@@ -575,8 +575,8 @@ impl Instruction {
                 context.carry = { context.pc != ArenaIndex::zero() };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            LongFork(dir) => {
-                let value: i32 = dir.into();
+            LongFork(alt_dir) => {
+                let value: i16 = alt_dir.into();
                 let mut fork = context.clean_fork();
                 fork.pc = fork.pc.move_by(value as isize);
                 machine.new_process(fork);
