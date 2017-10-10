@@ -3,7 +3,7 @@ use std::fmt;
 use std::convert::TryFrom;
 use instruction::parameter::{AltDirect, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
-use instruction::parameter::{Register, RegisterError, InvalidRegister};
+use instruction::parameter::Register;
 use instruction::parameter::dir_ind_reg::Error;
 use instruction::mem_size::MemSize;
 use instruction::write_to::WriteTo;

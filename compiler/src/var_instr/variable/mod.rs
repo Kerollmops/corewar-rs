@@ -3,16 +3,24 @@ mod var_dir_ind_reg;
 mod var_dir_reg;
 mod var_ind_reg;
 
+mod var_alt_dir_ind;
+mod var_alt_dir_ind_reg;
+mod var_alt_dir_reg;
+
 pub use self::var_dir_ind::VarDirInd;
 pub use self::var_dir_ind_reg::VarDirIndReg;
 pub use self::var_dir_reg::VarDirReg;
 pub use self::var_ind_reg::VarIndReg;
 
+pub use self::var_alt_dir_ind::VarAltDirInd;
+pub use self::var_alt_dir_ind_reg::VarAltDirIndReg;
+pub use self::var_alt_dir_reg::VarAltDirReg;
+
 use std::convert::TryFrom;
 use std::collections::HashMap;
 use pest::Error;
 use machine::instruction::mem_size::{MemSize, ConstMemSize};
-use machine::instruction::parameter::{Direct, Indirect, Register};
+use machine::instruction::parameter::{Direct, AltDirect, Indirect, Register};
 use label::Label;
 
 #[derive(Debug)]
@@ -75,6 +83,31 @@ impl AsComplete<Direct> for Variable<Direct> {
                 let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
                 Ok(Direct::from(value as i32))
+            },
+        }
+    }
+}
+
+impl FromPair for Variable<AltDirect> {
+    fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError> {
+        match Variable::<Direct>::from_pair(pair)? {
+            Variable::Complete(direct) => {
+                let value: i32 = direct.into();
+                Ok(Variable::Complete(AltDirect::from(value as i16)))
+            },
+            Variable::Incomplete(label) => Ok(Variable::Incomplete(label)),
+        }
+    }
+}
+
+impl AsComplete<AltDirect> for Variable<AltDirect> {
+    fn as_complete(&self, offset: usize, label_offsets: &HashMap<Label, usize>) -> Result<AltDirect, LabelNotFound> {
+        match *self {
+            Variable::Complete(alt_direct) => Ok(alt_direct),
+            Variable::Incomplete(ref label) => {
+                let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
+                let value = label_offset as isize - offset as isize;
+                Ok(AltDirect::from(value as i16))
             },
         }
     }

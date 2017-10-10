@@ -21,13 +21,13 @@ pub enum VarInstr {
     And(VarDirIndReg, VarDirIndReg, Register),
     Or(VarDirIndReg, VarDirIndReg, Register),
     Xor(VarDirIndReg, VarDirIndReg, Register),
-    ZJump(Variable<Direct>),
-    LoadIndex(VarDirIndReg, VarDirReg, Register),
-    StoreIndex(Register, VarDirIndReg, VarDirReg),
-    Fork(Variable<Direct>),
+    ZJump(Variable<AltDirect>),
+    LoadIndex(VarAltDirIndReg, VarAltDirReg, Register),
+    StoreIndex(Register, VarAltDirIndReg, VarAltDirReg),
+    Fork(Variable<AltDirect>),
     LongLoad(VarDirInd, Register),
-    LongLoadIndex(VarDirIndReg, VarDirReg, Register),
-    LongFork(Variable<Direct>),
+    LongLoadIndex(VarAltDirIndReg, VarAltDirReg, Register),
+    LongFork(Variable<AltDirect>),
     Display(Register),
 }
 
@@ -55,7 +55,7 @@ impl VarInstr {
                 let dir_ind_reg_b = dir_ind_reg_b.as_complete(offset, label_offsets)?;
                 Ok(Instruction::Xor(dir_ind_reg_a, dir_ind_reg_b, reg))
             },
-            ZJump(ref direct) => Ok(Instruction::ZJump(direct.as_complete(offset, label_offsets)?)),
+            ZJump(ref alt_direct) => Ok(Instruction::ZJump(alt_direct.as_complete(offset, label_offsets)?)),
             LoadIndex(ref dir_ind_reg, ref dir_reg, reg) => {
                 let dir_ind_reg = dir_ind_reg.as_complete(offset, label_offsets)?;
                 let dir_reg = dir_reg.as_complete(offset, label_offsets)?;
@@ -219,10 +219,10 @@ impl TryFrom<AsmPair> for VarInstr {
             },
             "ldi" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
                 (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
-                    let dir_ind_reg = VarDirIndReg::from_pair(pair_a)?;
-                    let dir_reg = VarDirReg::from_pair(pair_b)?;
+                    let alt_dir_ind_reg = VarAltDirIndReg::from_pair(pair_a)?;
+                    let alt_dir_reg = VarAltDirReg::from_pair(pair_b)?;
                     let reg = Register::from_pair(pair_c)?;
-                    Ok(VarInstr::LoadIndex(dir_ind_reg, dir_reg, reg))
+                    Ok(VarInstr::LoadIndex(alt_dir_ind_reg, alt_dir_reg, reg))
                 },
                 (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
@@ -232,9 +232,9 @@ impl TryFrom<AsmPair> for VarInstr {
             "sti" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
                 (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
                     let reg = Register::from_pair(pair_a)?;
-                    let dir_ind_reg = VarDirIndReg::from_pair(pair_b)?;
-                    let dir_reg = VarDirReg::from_pair(pair_c)?;
-                    Ok(VarInstr::StoreIndex(reg, dir_ind_reg, dir_reg))
+                    let alt_dir_ind_reg = VarAltDirIndReg::from_pair(pair_b)?;
+                    let alt_dir_reg = VarAltDirReg::from_pair(pair_c)?;
+                    Ok(VarInstr::StoreIndex(reg, alt_dir_ind_reg, alt_dir_reg))
                 },
                 (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),
@@ -261,10 +261,10 @@ impl TryFrom<AsmPair> for VarInstr {
             },
             "lldi" => match (next_param!(instr), next_param!(instr), next_param!(instr), next_param!(instr)) {
                 (Some(pair_a), Some(pair_b), Some(pair_c), None) => {
-                    let dir_ind_reg = VarDirIndReg::from_pair(pair_a)?;
-                    let dir_reg = VarDirReg::from_pair(pair_b)?;
+                    let alt_dir_ind_reg = VarAltDirIndReg::from_pair(pair_a)?;
+                    let alt_dir_reg = VarAltDirReg::from_pair(pair_b)?;
                     let reg = Register::from_pair(pair_c)?;
-                    Ok(VarInstr::LongLoadIndex(dir_ind_reg, dir_reg, reg))
+                    Ok(VarInstr::LongLoadIndex(alt_dir_ind_reg, alt_dir_reg, reg))
                 },
                 (_, _, _, _) => Err(Error::CustomErrorSpan {
                     message: "expected three parameters".into(),

@@ -1,7 +1,7 @@
 use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
-use instruction::parameter::{AltDirect, Register, RegisterError, InvalidRegister};
+use instruction::parameter::{AltDirect, Register};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::InvalidParamType;
 use instruction::parameter::dir_reg::Error;
