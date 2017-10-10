@@ -133,12 +133,14 @@ impl Instruction {
                 Store(reg, ind_reg)
             },
             4 => {
+                let _useless_param_code = ParamCode::try_from(&mut reader)?;
                 let reg_a = Register::try_from(&mut reader)?;
                 let reg_b = Register::try_from(&mut reader)?;
                 let reg_c = Register::try_from(&mut reader)?;
                 Addition(reg_a, reg_b, reg_c)
             },
             5 => {
+                let _useless_param_code = ParamCode::try_from(&mut reader)?;
                 let reg_a = Register::try_from(&mut reader)?;
                 let reg_b = Register::try_from(&mut reader)?;
                 let reg_c = Register::try_from(&mut reader)?;
@@ -246,11 +248,13 @@ impl Instruction {
                 ind_reg.write_to(writer)?;
             },
             Addition(reg_a, reg_b, reg_c) => {
+                ParamCode::null().write_to(writer)?;
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
                 reg_c.write_to(writer)?;
             },
             Substraction(reg_a, reg_b, reg_c) => {
+                ParamCode::null().write_to(writer)?;
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
                 reg_c.write_to(writer)?;
@@ -486,8 +490,8 @@ impl MemSize for Instruction {
             Live(a) => a.mem_size(),
             Load(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
             Store(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            Addition(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
-            Substraction(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Addition(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            Substraction(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
             And(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
             Or(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
             Xor(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
