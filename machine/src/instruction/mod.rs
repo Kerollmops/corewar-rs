@@ -26,21 +26,133 @@ use self::Instruction::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Instruction {
+    /// This instruction is the most important one,
+    /// it permit to keep a process in-live also
+    /// has the effect of bringing that the
+    /// player whose number is in parameter is alive.
+    ///
+    /// It's only parameter is a `Direct`.
     Live(Direct),
+
+    /// Loads the first parameter to the register specified as second parameter.
+    ///
+    /// The first parameter is a `Direct` or an `Indirect` and
+    /// the second is a `Register`.
     Load(DirInd, Register),
+
+    /// Stores the value of the first parameter in the second parameter.
+    ///
+    /// The first parameter is a `Register` and
+    /// the second is a `Indirect` or an `Register`.
     Store(Register, IndReg),
+
+    /// Takes three registers, sums the first two parameters and
+    /// stores the result in the third.
+    ///
+    /// *warning*: in memory a useless param code is present.
+    ///
+    /// The first, second and third parameters are `Register`s.
     Addition(Register, Register, Register),
+
+    /// Takes three registers, substract the first two parameters and
+    /// stores the result in the third.
+    ///
+    /// *warning*: in memory a useless param code is present.
+    ///
+    /// The first, second and third parameters are `Register`s.
     Substraction(Register, Register, Register),
+
+    /// Apply a binary-and (*&*) on the first two parameters and
+    /// stores the value in the third parameter.
+    ///
+    /// The first and scond arguments are `Direct`, `Indirect` or `Register` and
+    /// the third is a `Register`.
     And(DirIndReg, DirIndReg, Register),
+
+    /// Apply a binary-or (*|*) on the first two parameters and
+    /// stores the value in the third parameter.
+    ///
+    /// The first and scond arguments are `Direct`, `Indirect` or `Register` and
+    /// the third is a `Register`.
     Or(DirIndReg, DirIndReg, Register),
+
+    /// Apply a binary-xor (*^*) on the first two parameters and
+    /// stores the value in the third parameter.
+    ///
+    /// The first and second arguments are of type `Direct`, `Indirect` or `Register` and
+    /// the third is a `Register`.
     Xor(DirIndReg, DirIndReg, Register),
-    ZJump(Direct),
-    LoadIndex(DirIndReg, DirReg, Register),
-    StoreIndex(Register, DirIndReg, DirReg),
-    Fork(Direct),
+
+    /// Jumps to the given address if the *carry* is *true*.
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// It's only parameter is a `Direct` value.
+    ZJump(Direct), // FIXME: alt_direct
+
+    /// Sums the first two parameters and reads at this computed address and
+    /// stores the value to the third parameter.
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
+    /// the second is a `Direct` or a `Register` and
+    /// the third one is a `Register`.
+    LoadIndex(DirIndReg, DirReg, Register), // FIXME: alt_direct
+
+    /// Sums the second and third parameters and
+    /// stores the first argument to the computed address.
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// The first argument is a `Register`,
+    /// the second is a `Direct`, an `Indirect` or a `Register` and
+    /// the last one is a `Direct` or a `Register`.
+    StoreIndex(Register, DirIndReg, DirReg), // FIXME: alt_direct
+
+    /// Create a new process that inherit of the different states of the father.
+    ///
+    /// *fork pc*: _PC_ + (first argument % _IDX_MOD_)
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// It's first argument is a `Direct`.
+    Fork(Direct), // FIXME: alt_direct
+
+    /// Loads the first parameter to the register specified as second parameter.
+    ///
+    /// *address*: _PC_ + first parameter
+    ///
+    /// The first parameter is a `Direct` or an `Indirect` and
+    /// the second is a `Register`.
     LongLoad(DirInd, Register),
-    LongLoadIndex(DirIndReg, DirReg, Register),
-    LongFork(Direct),
+
+    /// Sums the first two parameters and reads at this computed address and
+    /// stores the value to the third parameter.
+    ///
+    /// *address*: _PC_ + first parameter
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
+    /// the second is a `Direct` or a `Register` and
+    /// the third one is a `Register`.
+    LongLoadIndex(DirIndReg, DirReg, Register), // FIXME: alt_direct
+
+    /// Create a new process that inherit of the different states of the father.
+    ///
+    /// *fork pc*: _PC_ + first argument
+    ///
+    /// *warning*: It uses `alternative direct`.
+    ///
+    /// It's first argument is a `Direct`.
+    LongFork(Direct), // FIXME: alt_direct
+
+    /// Output the first argument % 256 to standard output.
+    ///
+    /// *warning*: in memory a useless param code is present.
+    ///
+    /// The first argument is a `Register`.
     Display(Register),
 }
 
