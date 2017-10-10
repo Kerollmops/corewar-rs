@@ -31,12 +31,12 @@ fn failable_main() -> Result<(), Box<error::Error>> {
 
     compile(&input).map_err(|e| Box::new(io::Error::new(ErrorKind::Other, e.to_string())))
         .and_then(|out| {
-            let path = path.with_extension("cor");
+            let path = path.with_extension("cor").file_name().unwrap().to_string_lossy().to_string();
             File::create(&path)
                 .and_then(|mut f| copy(&mut out.as_slice(), &mut f))
                 .map(|_| path)
                 .map_err(Box::new)
-        }).map(|path| println!("Writing output program to {}", path.display()))
+        }).map(|path| println!("Writing output program to {:?}", path))
         .map_err(|e| e as Box<error::Error>)
 }
 
