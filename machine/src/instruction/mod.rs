@@ -88,7 +88,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's only parameter is a `Direct` value.
-    ZJump(AltDirect), // FIXME: alt_direct
+    ZJump(AltDirect),
 
     /// Sums the first two parameters and reads at this computed address and
     /// stores the value to the third parameter.
@@ -98,7 +98,7 @@ pub enum Instruction {
     /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
     /// the second is a `Direct` or a `Register` and
     /// the third one is a `Register`.
-    LoadIndex(AltDirIndReg, AltDirReg, Register), // FIXME: alt_direct
+    LoadIndex(AltDirIndReg, AltDirReg, Register),
 
     /// Sums the second and third parameters and
     /// stores the first argument to the computed address.
@@ -108,7 +108,7 @@ pub enum Instruction {
     /// The first argument is a `Register`,
     /// the second is a `Direct`, an `Indirect` or a `Register` and
     /// the last one is a `Direct` or a `Register`.
-    StoreIndex(Register, AltDirIndReg, AltDirReg), // FIXME: alt_direct
+    StoreIndex(Register, AltDirIndReg, AltDirReg),
 
     /// Create a new process that inherit of the different states of the father.
     ///
@@ -117,7 +117,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's first argument is a `Direct`.
-    Fork(AltDirect), // FIXME: alt_direct
+    Fork(AltDirect),
 
     /// Loads the first parameter to the register specified as second parameter.
     ///
@@ -137,7 +137,7 @@ pub enum Instruction {
     /// The first parameter is a `Direct`, an `Indirect` or a `Register`,
     /// the second is a `Direct` or a `Register` and
     /// the third one is a `Register`.
-    LongLoadIndex(AltDirIndReg, AltDirReg, Register), // FIXME: alt_direct
+    LongLoadIndex(AltDirIndReg, AltDirReg, Register),
 
     /// Create a new process that inherit of the different states of the father.
     ///
@@ -146,7 +146,7 @@ pub enum Instruction {
     /// *warning*: It uses `alternative direct`.
     ///
     /// It's first argument is a `Direct`.
-    LongFork(AltDirect), // FIXME: alt_direct
+    LongFork(AltDirect),
 
     /// Output the first argument % 256 to standard output.
     ///
