@@ -596,27 +596,51 @@ impl Instruction {
     }
 }
 
+impl HasParamCode for Instruction {
+    fn has_param_code(&self) -> bool {
+        match *self {
+            Live(_) => false,
+            Load(_, _) => true,
+            Store(_, _) => true,
+            Addition(_, _, _) => true,
+            Substraction(_, _, _) => true,
+            And(_, _, _) => true,
+            Or(_, _, _) => true,
+            Xor(_, _, _) => true,
+            ZJump(_) => false,
+            LoadIndex(_, _, _) => true,
+            StoreIndex(_, _, _) => true,
+            Fork(_) => false,
+            LongLoad(_, _) => true,
+            LongLoadIndex(_, _, _) => true,
+            LongFork(_) => false,
+            Display(_) => true,
+        }
+    }
+}
+
 impl MemSize for Instruction {
     fn mem_size(&self) -> usize {
         let size = match *self {
             Live(a) => a.mem_size(),
-            Load(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            Store(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            Addition(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Substraction(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            And(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Or(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Xor(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            Load(a, b) => a.mem_size() + b.mem_size(),
+            Store(a, b) => a.mem_size() + b.mem_size(),
+            Addition(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Substraction(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            And(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Or(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Xor(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
             ZJump(a) => a.mem_size(),
-            LoadIndex(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            StoreIndex(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            LoadIndex(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            StoreIndex(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
             Fork(a) => a.mem_size(),
-            LongLoad(a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            LongLoadIndex(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            LongLoad(a, b) => a.mem_size() + b.mem_size(),
+            LongLoadIndex(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
             LongFork(a) => a.mem_size(),
-            Display(a) => PARAM_CODE_SIZE + a.mem_size(),
+            Display(a) => a.mem_size(),
         };
-        OP_CODE_SIZE + size
+        let param_code = if self.has_param_code() { PARAM_CODE_SIZE } else { 0 };
+        OP_CODE_SIZE + param_code + size
     }
 }
 

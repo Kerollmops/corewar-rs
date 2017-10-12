@@ -45,6 +45,10 @@ pub use self::dir_ind_reg::Error as DirIndRegError;
 pub use self::dir_reg::Error as DirRegError;
 pub use self::ind_reg::Error as IndRegError;
 
+pub trait HasParamCode {
+    fn has_param_code(&self) -> bool;
+}
+
 pub trait ParamTypeOf {
     fn param_type(&self) -> ParamType;
 }

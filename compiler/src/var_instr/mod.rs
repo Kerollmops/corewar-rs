@@ -82,28 +82,53 @@ impl VarInstr {
     }
 }
 
+impl HasParamCode for VarInstr {
+    fn has_param_code(&self) -> bool {
+        use self::VarInstr::*;
+        match *self {
+            Live(_) => false,
+            Load(_, _) => true,
+            Store(_, _) => true,
+            Addition(_, _, _) => true,
+            Substraction(_, _, _) => true,
+            And(_, _, _) => true,
+            Or(_, _, _) => true,
+            Xor(_, _, _) => true,
+            ZJump(_) => false,
+            LoadIndex(_, _, _) => true,
+            StoreIndex(_, _, _) => true,
+            Fork(_) => false,
+            LongLoad(_, _) => true,
+            LongLoadIndex(_, _, _) => true,
+            LongFork(_) => false,
+            Display(_) => true,
+        }
+    }
+}
+
 impl MemSize for VarInstr {
     fn mem_size(&self) -> usize {
         use self::VarInstr::*;
         let size = match *self {
             Live(ref a) => a.mem_size(),
-            Load(ref a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            Store(a, ref b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            Addition(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Substraction(a, b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            And(ref a, ref b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Or(ref a, ref b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            Xor(ref a, ref b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            Load(ref a, b) => a.mem_size() + b.mem_size(),
+            Store(a, ref b) => a.mem_size() + b.mem_size(),
+            Addition(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Substraction(a, b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            And(ref a, ref b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Or(ref a, ref b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            Xor(ref a, ref b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
             ZJump(ref a) => a.mem_size(),
-            LoadIndex(ref a, ref b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
-            StoreIndex(ref a, ref b, ref c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            LoadIndex(ref a, ref b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
+            StoreIndex(ref a, ref b, ref c) => a.mem_size() + b.mem_size() + c.mem_size(),
             Fork(ref a) => a.mem_size(),
-            LongLoad(ref a, b) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size(),
-            LongLoadIndex(ref a, ref b, c) => PARAM_CODE_SIZE + a.mem_size() + b.mem_size() + c.mem_size(),
+            LongLoad(ref a, b) => a.mem_size() + b.mem_size(),
+            LongLoadIndex(ref a, ref b, c) => a.mem_size() + b.mem_size() + c.mem_size(),
             LongFork(ref a) => a.mem_size(),
-            Display(a) => PARAM_CODE_SIZE + a.mem_size(),
+            Display(a) => a.mem_size(),
         };
-        OP_CODE_SIZE + size
+        let param_code = if self.has_param_code() { PARAM_CODE_SIZE } else { 0 };
+        OP_CODE_SIZE + param_code + size
     }
 }
 
