@@ -90,12 +90,29 @@ impl AsComplete<Direct> for Variable<Direct> {
 
 impl FromPair for Variable<AltDirect> {
     fn from_pair(pair: ::AsmPair) -> Result<Self, ::AsmError> {
-        match Variable::<Direct>::from_pair(pair)? {
-            Variable::Complete(direct) => {
-                let value: i32 = direct.into();
-                Ok(Variable::Complete(AltDirect::from(value as i16)))
+        match pair.as_rule() {
+            ::Rule::direct => {
+                let pair_value = pair.into_inner().next().expect("number not found");
+                let span_value = pair_value.clone().into_span();
+                match pair_value.as_rule() {
+                    ::Rule::number => {
+                        let number = i16::from_str_radix(span_value.clone().as_str(), 10);
+                        number.map(|n| Variable::Complete(AltDirect::from(n)))
+                              .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
+                    },
+                    ::Rule::hexnumber => {
+                        let number = i16::from_str_radix(&span_value.clone().as_str()[2..], 16);
+                        number.map(|n| Variable::Complete(AltDirect::from(n)))
+                              .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
+                    },
+                    ::Rule::label_call => Ok(Variable::Incomplete(Label::from(pair_value))),
+                    _ => unreachable!()
+                }
             },
-            Variable::Incomplete(label) => Ok(Variable::Incomplete(label)),
+            _ => Err(Error::CustomErrorSpan {
+                message: format!("expected direct found {:?}", pair.as_rule()),
+                span: pair.clone().into_span(),
+            }),
         }
     }
 }
