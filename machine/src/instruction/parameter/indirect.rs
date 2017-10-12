@@ -2,6 +2,7 @@ use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
@@ -22,6 +23,12 @@ impl Indirect {
 
 impl ConstMemSize for Indirect {
     const MEM_SIZE: usize = IND_SIZE;
+}
+
+impl ParamTypeOf for Indirect {
+    fn param_type(&self) -> ParamType {
+        ParamType::Indirect
+    }
 }
 
 impl GetValue for Indirect {

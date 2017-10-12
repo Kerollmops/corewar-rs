@@ -245,7 +245,7 @@ impl Instruction {
                 Store(reg, ind_reg)
             },
             4 => {
-                if cfg!(feature = "useless-param-codes") {
+                if cfg!(feature="useless-param-codes") {
                     ParamCode::try_from(&mut reader)?;
                 }
                 let reg_a = Register::try_from(&mut reader)?;
@@ -254,7 +254,7 @@ impl Instruction {
                 Addition(reg_a, reg_b, reg_c)
             },
             5 => {
-                if cfg!(feature = "useless-param-codes") {
+                if cfg!(feature="useless-param-codes") {
                     ParamCode::try_from(&mut reader)?;
                 }
                 let reg_a = Register::try_from(&mut reader)?;
@@ -339,7 +339,7 @@ impl Instruction {
             },
             15 => LongFork(AltDirect::try_from(&mut reader)?),
             16 => {
-                if cfg!(feature = "useless-param-codes") {
+                if cfg!(feature="useless-param-codes") {
                     ParamCode::try_from(&mut reader)?;
                 }
                 let reg = Register::try_from(&mut reader)?;
@@ -355,7 +355,10 @@ impl Instruction {
             Live(dir) => dir.write_to(writer)?,
             Load(dir_ind, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind)
+                        .second(&reg)
+                        .build()
                 } else {
                     ParamCode::builder().first(&dir_ind).build()
                 };
@@ -365,7 +368,10 @@ impl Instruction {
             },
             Store(reg, ind_reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&reg)
+                        .second(&ind_reg)
+                        .build()
                 } else {
                     ParamCode::builder().second(&ind_reg).build()
                 };
@@ -375,8 +381,12 @@ impl Instruction {
             },
             Addition(reg_a, reg_b, reg_c) => {
                 if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes");
-                    ParamCode::null().write_to(writer)?;
+                    ParamCode::builder()
+                        .first(&reg_a)
+                        .second(&reg_b)
+                        .third(&reg_c)
+                        .build()
+                        .write_to(writer)?;
                 }
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
@@ -384,8 +394,12 @@ impl Instruction {
             },
             Substraction(reg_a, reg_b, reg_c) => {
                 if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes");
-                    ParamCode::null().write_to(writer)?;
+                    ParamCode::builder()
+                        .first(&reg_a)
+                        .second(&reg_b)
+                        .third(&reg_c)
+                        .build()
+                        .write_to(writer)?;
                 }
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
@@ -393,9 +407,16 @@ impl Instruction {
             },
             And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .third(&reg)
+                        .build()
                 } else {
-                    ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build()
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .build()
                 };
                 code.write_to(writer)?;
                 dir_ind_reg_a.write_to(writer)?;
@@ -404,9 +425,16 @@ impl Instruction {
             },
             Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .third(&reg)
+                        .build()
                 } else {
-                    ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build()
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .build()
                 };
                 code.write_to(writer)?;
                 dir_ind_reg_a.write_to(writer)?;
@@ -415,9 +443,16 @@ impl Instruction {
             },
             Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .third(&reg)
+                        .build()
                 } else {
-                    ParamCode::builder().first(&dir_ind_reg_a).second(&dir_ind_reg_b).build()
+                    ParamCode::builder()
+                        .first(&dir_ind_reg_a)
+                        .second(&dir_ind_reg_b)
+                        .build()
                 };
                 code.write_to(writer)?;
                 dir_ind_reg_a.write_to(writer)?;
@@ -427,9 +462,16 @@ impl Instruction {
             ZJump(dir) => dir.write_to(writer)?,
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind_reg)
+                        .second(&dir_reg)
+                        .third(&reg)
+                        .build()
                 } else {
-                    ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build()
+                    ParamCode::builder()
+                        .first(&dir_ind_reg)
+                        .second(&dir_reg)
+                        .build()
                 };
                 code.write_to(writer)?;
                 dir_ind_reg.write_to(writer)?;
@@ -438,9 +480,16 @@ impl Instruction {
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&reg)
+                        .second(&dir_ind_reg)
+                        .third(&dir_reg)
+                        .build()
                 } else {
-                    ParamCode::builder().second(&dir_ind_reg).third(&dir_reg).build()
+                    ParamCode::builder()
+                        .second(&dir_ind_reg)
+                        .third(&dir_reg)
+                        .build()
                 };
                 code.write_to(writer)?;
                 reg.write_to(writer)?;
@@ -450,7 +499,7 @@ impl Instruction {
             Fork(dir) => dir.write_to(writer)?,
             LongLoad(dir_ind, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder().first(&dir_ind).second(&reg).build()
                 } else {
                     ParamCode::builder().first(&dir_ind).build()
                 };
@@ -460,9 +509,16 @@ impl Instruction {
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let code = if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes")
+                    ParamCode::builder()
+                        .first(&dir_ind_reg)
+                        .second(&dir_reg)
+                        .third(&reg)
+                        .build()
                 } else {
-                    ParamCode::builder().first(&dir_ind_reg).second(&dir_reg).build()
+                    ParamCode::builder()
+                        .first(&dir_ind_reg)
+                        .second(&dir_reg)
+                        .build()
                 };
                 code.write_to(writer)?;
                 dir_ind_reg.write_to(writer)?;
@@ -472,8 +528,10 @@ impl Instruction {
             LongFork(dir) => dir.write_to(writer)?,
             Display(reg) => {
                 if cfg!(feature="useless-param-codes") {
-                    unimplemented!("useless-param-codes");
-                    ParamCode::null().write_to(writer)?;
+                    ParamCode::builder()
+                        .first(&reg)
+                        .build()
+                        .write_to(writer)?;
                 }
                 reg.write_to(writer)?;
             },
@@ -670,7 +728,7 @@ impl HasParamCode for Instruction {
         }
     }
 
-    #[cfg(not(feature = "useless-param-codes"))]
+    #[cfg(not(feature="useless-param-codes"))]
     fn has_param_code(&self) -> bool {
         match *self {
             Live(_) => false,
