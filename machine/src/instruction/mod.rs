@@ -218,7 +218,7 @@ impl From<DirIndError> for Error {
 }
 
 impl Instruction {
-    pub const SMALLEST_INSTR_SIZE: usize = OP_CODE_SIZE + Register::MEM_SIZE;
+    pub const SMALLEST_SIZE: usize = OP_CODE_SIZE + Register::MEM_SIZE;
 
     pub fn read_from<R: Read>(mut reader: R) -> Result<Self, Error> {
         Ok(match reader.read_u8()? {
@@ -510,7 +510,9 @@ impl Instruction {
         }
     }
 
-    pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) -> io::Result<()> {
+    pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W)
+        -> io::Result<()> {
+
         match *self {
             Live(Direct(champion_id)) => {
                 context.cycle_since_last_live = 0;
