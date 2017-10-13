@@ -2,7 +2,6 @@ use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{ReadBytesExt, WriteBytesExt};
-use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
@@ -49,12 +48,6 @@ impl Register {
 
 impl ConstMemSize for Register {
     const MEM_SIZE: usize = REG_SIZE;
-}
-
-impl ParamTypeOf for Register {
-    fn param_type(&self) -> ParamType {
-        ParamType::Register
-    }
 }
 
 impl GetValue for Register {

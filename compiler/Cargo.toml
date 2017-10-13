@@ -10,7 +10,3 @@ pest = "=1.0.0-beta.7"
 pest_derive = "=1.0.0-beta.7"
 core = { path = "../core" }
 machine = { path = "../machine" }
-
-[features]
-default = []
-useless-param-codes = ["machine/useless-param-codes"]

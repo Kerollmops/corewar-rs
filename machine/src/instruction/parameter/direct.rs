@@ -2,7 +2,6 @@ use std::io::{self, Read, Write};
 use std::fmt;
 use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
-use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::DIR_SIZE;
 use instruction::mem_size::ConstMemSize;
 use instruction::write_to::WriteTo;
@@ -21,12 +20,6 @@ impl Direct {
 
 impl ConstMemSize for Direct {
     const MEM_SIZE: usize = DIR_SIZE;
-}
-
-impl ParamTypeOf for Direct {
-    fn param_type(&self) -> ParamType {
-        ParamType::Direct
-    }
 }
 
 impl GetValue for Direct {

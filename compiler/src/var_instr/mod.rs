@@ -83,30 +83,6 @@ impl VarInstr {
 }
 
 impl HasParamCode for VarInstr {
-    #[cfg(feature="useless-param-codes")]
-    fn has_param_code(&self) -> bool {
-        use self::VarInstr::*;
-        match *self {
-            Live(_) => false,
-            Load(_, _) => true,
-            Store(_, _) => true,
-            Addition(_, _, _) => true,
-            Substraction(_, _, _) => true,
-            And(_, _, _) => true,
-            Or(_, _, _) => true,
-            Xor(_, _, _) => true,
-            ZJump(_) => false,
-            LoadIndex(_, _, _) => true,
-            StoreIndex(_, _, _) => true,
-            Fork(_) => false,
-            LongLoad(_, _) => true,
-            LongLoadIndex(_, _, _) => true,
-            LongFork(_) => false,
-            Display(_) => true,
-        }
-    }
-
-    #[cfg(not(feature="useless-param-codes"))]
     fn has_param_code(&self) -> bool {
         use self::VarInstr::*;
         match *self {

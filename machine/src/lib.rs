@@ -15,10 +15,3 @@ mod process;
 pub mod instruction;
 
 pub use machine::{Machine, CycleExecute};
-
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn it_works() {
-//     }
-// }

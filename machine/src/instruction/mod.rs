@@ -49,15 +49,11 @@ pub enum Instruction {
     /// Takes three registers, sums the first two parameters and
     /// stores the result in the third.
     ///
-    /// *warning*: in memory a useless param code is present.
-    ///
     /// The first, second and third parameters are `Register`s.
     Addition(Register, Register, Register),
 
     /// Takes three registers, substract the first two parameters and
     /// stores the result in the third.
-    ///
-    /// *warning*: in memory a useless param code is present.
     ///
     /// The first, second and third parameters are `Register`s.
     Substraction(Register, Register, Register),
@@ -150,8 +146,6 @@ pub enum Instruction {
 
     /// Output the first argument % 256 to standard output.
     ///
-    /// *warning*: in memory a useless param code is present.
-    ///
     /// The first argument is a `Register`.
     Display(Register),
 }
@@ -229,37 +223,41 @@ impl Instruction {
 
     pub fn read_from<R: Read>(mut reader: R) -> Result<Self, Error> {
         Ok(match reader.read_u8()? {
-            1 => Live(Direct::try_from(&mut reader)?),
+            1 => {
+                let dir = Direct::try_from(&mut reader)?;
+
+                Live(dir)
+            },
             2 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::First)?;
+
                 let dir_ind = DirInd::try_from((param_type, &mut reader))?;
                 let reg = Register::try_from(&mut reader)?;
+
                 Load(dir_ind, reg)
             },
             3 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::Second)?;
+
                 let reg = Register::try_from(&mut reader)?;
                 let ind_reg = IndReg::try_from((param_type, &mut reader))?;
+
                 Store(reg, ind_reg)
             },
             4 => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::try_from(&mut reader)?;
-                }
                 let reg_a = Register::try_from(&mut reader)?;
                 let reg_b = Register::try_from(&mut reader)?;
                 let reg_c = Register::try_from(&mut reader)?;
+
                 Addition(reg_a, reg_b, reg_c)
             },
             5 => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::try_from(&mut reader)?;
-                }
                 let reg_a = Register::try_from(&mut reader)?;
                 let reg_b = Register::try_from(&mut reader)?;
                 let reg_c = Register::try_from(&mut reader)?;
+
                 Substraction(reg_a, reg_b, reg_c)
             },
             6 => {
@@ -295,7 +293,11 @@ impl Instruction {
 
                 Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
-            9 => ZJump(AltDirect::try_from(&mut reader)?),
+            9 => {
+                let alt_dir = AltDirect::try_from(&mut reader)?;
+
+                ZJump(alt_dir)
+            },
             10 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
@@ -318,12 +320,18 @@ impl Instruction {
 
                 StoreIndex(reg, alt_dir_ind_reg, alt_dir_reg)
             },
-            12 => Fork(AltDirect::try_from(&mut reader)?),
+            12 => {
+                let alt_dir = AltDirect::try_from(&mut reader)?;
+
+                Fork(alt_dir)
+            },
             13 => {
                 let param_code = ParamCode::try_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
+
                 let dir_ind = DirInd::try_from((first_type, &mut reader))?;
                 let reg = Register::try_from(&mut reader)?;
+
                 LongLoad(dir_ind, reg)
             },
             14 => {
@@ -337,12 +345,14 @@ impl Instruction {
 
                 LongLoadIndex(alt_dir_ind_reg, alt_dir_reg, reg)
             },
-            15 => LongFork(AltDirect::try_from(&mut reader)?),
+            15 => {
+                let alt_dir = AltDirect::try_from(&mut reader)?;
+
+                LongFork(alt_dir)
+            }
             16 => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::try_from(&mut reader)?;
-                }
                 let reg = Register::try_from(&mut reader)?;
+
                 Display(reg)
             },
             code => return Err(Error::InvalidCode(code)),
@@ -352,187 +362,107 @@ impl Instruction {
     pub fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write(&[self.op_code()])?;
         match *self {
-            Live(dir) => dir.write_to(writer)?,
+            Live(dir) => {
+                dir.write_to(writer)?;
+            },
             Load(dir_ind, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind)
-                        .second(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder().first(&dir_ind).build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind)
+                    .build().write_to(writer)?;
+
                 dir_ind.write_to(writer)?;
                 reg.write_to(writer)?;
             },
             Store(reg, ind_reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&reg)
-                        .second(&ind_reg)
-                        .build()
-                } else {
-                    ParamCode::builder().second(&ind_reg).build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .second(&ind_reg)
+                    .build().write_to(writer)?;
+
                 reg.write_to(writer)?;
                 ind_reg.write_to(writer)?;
             },
             Addition(reg_a, reg_b, reg_c) => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&reg_a)
-                        .second(&reg_b)
-                        .third(&reg_c)
-                        .build()
-                        .write_to(writer)?;
-                }
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
                 reg_c.write_to(writer)?;
             },
             Substraction(reg_a, reg_b, reg_c) => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&reg_a)
-                        .second(&reg_b)
-                        .third(&reg_c)
-                        .build()
-                        .write_to(writer)?;
-                }
                 reg_a.write_to(writer)?;
                 reg_b.write_to(writer)?;
                 reg_c.write_to(writer)?;
             },
             And(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .third(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind_reg_a).second(&dir_ind_reg_b)
+                    .build().write_to(writer)?;
+
                 dir_ind_reg_a.write_to(writer)?;
                 dir_ind_reg_b.write_to(writer)?;
                 reg.write_to(writer)?;
             },
             Or(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .third(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind_reg_a).second(&dir_ind_reg_b)
+                    .build().write_to(writer)?;
+
                 dir_ind_reg_a.write_to(writer)?;
                 dir_ind_reg_b.write_to(writer)?;
                 reg.write_to(writer)?;
             },
             Xor(dir_ind_reg_a, dir_ind_reg_b, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .third(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg_a)
-                        .second(&dir_ind_reg_b)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind_reg_a).second(&dir_ind_reg_b)
+                    .build().write_to(writer)?;
+
                 dir_ind_reg_a.write_to(writer)?;
                 dir_ind_reg_b.write_to(writer)?;
                 reg.write_to(writer)?;
             },
-            ZJump(dir) => dir.write_to(writer)?,
+            ZJump(dir) => {
+                dir.write_to(writer)?;
+            },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg)
-                        .second(&dir_reg)
-                        .third(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg)
-                        .second(&dir_reg)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind_reg).second(&dir_reg)
+                    .build().write_to(writer)?;
+
                 dir_ind_reg.write_to(writer)?;
                 dir_reg.write_to(writer)?;
                 reg.write_to(writer)?;
             },
             StoreIndex(reg, dir_ind_reg, dir_reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&reg)
-                        .second(&dir_ind_reg)
-                        .third(&dir_reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .second(&dir_ind_reg)
-                        .third(&dir_reg)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .second(&dir_ind_reg).third(&dir_reg)
+                    .build().write_to(writer)?;
+
                 reg.write_to(writer)?;
                 dir_ind_reg.write_to(writer)?;
                 dir_reg.write_to(writer)?;
             },
-            Fork(dir) => dir.write_to(writer)?,
+            Fork(dir) => {
+                dir.write_to(writer)?;
+            },
             LongLoad(dir_ind, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder().first(&dir_ind).second(&reg).build()
-                } else {
-                    ParamCode::builder().first(&dir_ind).build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind)
+                    .build().write_to(writer)?;
+
                 dir_ind.write_to(writer)?;
                 reg.write_to(writer)?;
             },
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
-                let code = if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg)
-                        .second(&dir_reg)
-                        .third(&reg)
-                        .build()
-                } else {
-                    ParamCode::builder()
-                        .first(&dir_ind_reg)
-                        .second(&dir_reg)
-                        .build()
-                };
-                code.write_to(writer)?;
+                ParamCode::builder()
+                    .first(&dir_ind_reg).second(&dir_reg)
+                    .build().write_to(writer)?;
+
                 dir_ind_reg.write_to(writer)?;
                 dir_reg.write_to(writer)?;
                 reg.write_to(writer)?;
             },
-            LongFork(dir) => dir.write_to(writer)?,
+            LongFork(dir) => {
+                dir.write_to(writer)?;
+            },
             Display(reg) => {
-                if cfg!(feature="useless-param-codes") {
-                    ParamCode::builder()
-                        .first(&reg)
-                        .build()
-                        .write_to(writer)?;
-                }
                 reg.write_to(writer)?;
             },
         }
@@ -706,29 +636,6 @@ impl Instruction {
 }
 
 impl HasParamCode for Instruction {
-    #[cfg(feature="useless-param-codes")]
-    fn has_param_code(&self) -> bool {
-        match *self {
-            Live(_) => false,
-            Load(_, _) => true,
-            Store(_, _) => true,
-            Addition(_, _, _) => true,
-            Substraction(_, _, _) => true,
-            And(_, _, _) => true,
-            Or(_, _, _) => true,
-            Xor(_, _, _) => true,
-            ZJump(_) => false,
-            LoadIndex(_, _, _) => true,
-            StoreIndex(_, _, _) => true,
-            Fork(_) => false,
-            LongLoad(_, _) => true,
-            LongLoadIndex(_, _, _) => true,
-            LongFork(_) => false,
-            Display(_) => true,
-        }
-    }
-
-    #[cfg(not(feature="useless-param-codes"))]
     fn has_param_code(&self) -> bool {
         match *self {
             Live(_) => false,
