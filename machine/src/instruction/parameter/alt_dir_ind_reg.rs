@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{AltDirect, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::Register;
@@ -16,6 +15,16 @@ pub enum AltDirIndReg {
     AltDirect(AltDirect),
     Indirect(Indirect),
     Register(Register),
+}
+
+impl AltDirIndReg {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: &mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Direct => Ok(AltDirIndReg::AltDirect(AltDirect::read_from(reader)?)),
+            ParamType::Indirect => Ok(AltDirIndReg::Indirect(Indirect::read_from(reader)?)),
+            ParamType::Register => Ok(AltDirIndReg::Register(Register::read_from(reader)?)),
+        }
+    }
 }
 
 impl GetValue for AltDirIndReg {
@@ -62,18 +71,6 @@ impl WriteTo for AltDirIndReg {
             AltDirIndReg::AltDirect(alt_direct) => alt_direct.write_to(writer),
             AltDirIndReg::Indirect(indirect) => indirect.write_to(writer),
             AltDirIndReg::Register(register) => register.write_to(writer),
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for AltDirIndReg {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Direct => Ok(AltDirIndReg::AltDirect(AltDirect::try_from(reader)?)),
-            ParamType::Indirect => Ok(AltDirIndReg::Indirect(Indirect::try_from(reader)?)),
-            ParamType::Register => Ok(AltDirIndReg::Register(Register::try_from(reader)?)),
         }
     }
 }

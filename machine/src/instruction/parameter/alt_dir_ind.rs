@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{AltDirect, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::InvalidParamType;
@@ -15,6 +14,16 @@ use process::Context;
 pub enum AltDirInd {
     AltDirect(AltDirect),
     Indirect(Indirect),
+}
+
+impl AltDirInd {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: &mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Direct => Ok(AltDirInd::AltDirect(AltDirect::read_from(reader)?)),
+            ParamType::Indirect => Ok(AltDirInd::Indirect(Indirect::read_from(reader)?)),
+            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
+        }
+    }
 }
 
 impl GetValue for AltDirInd {
@@ -56,18 +65,6 @@ impl ParamTypeOf for AltDirInd {
         match *self {
             AltDirInd::AltDirect(_) => ParamType::Direct,
             AltDirInd::Indirect(_) => ParamType::Indirect,
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for AltDirInd {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Direct => Ok(AltDirInd::AltDirect(AltDirect::try_from(reader)?)),
-            ParamType::Indirect => Ok(AltDirInd::Indirect(Indirect::try_from(reader)?)),
-            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
         }
     }
 }

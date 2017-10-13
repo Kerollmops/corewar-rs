@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::io::{self, Write};
 use std::mem;
 use process::{Process, Context};
@@ -36,7 +35,7 @@ impl Machine {
             }
 
             let mut context = Context::new(arena_index);
-            let reg = Register::try_from(1).unwrap();
+            let reg = Register::new(1).unwrap();
             context.registers[reg] = *id;
 
             let process = Process::new(context, &arena);

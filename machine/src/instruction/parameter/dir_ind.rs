@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::InvalidParamType;
@@ -26,6 +25,16 @@ impl From<io::Error> for Error {
 pub enum DirInd {
     Direct(Direct),
     Indirect(Indirect),
+}
+
+impl DirInd {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: &mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Direct => Ok(DirInd::Direct(Direct::read_from(reader)?)),
+            ParamType::Indirect => Ok(DirInd::Indirect(Indirect::read_from(reader)?)),
+            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
+        }
+    }
 }
 
 impl GetValue for DirInd {
@@ -67,18 +76,6 @@ impl ParamTypeOf for DirInd {
         match *self {
             DirInd::Direct(_) => ParamType::Direct,
             DirInd::Indirect(_) => ParamType::Indirect,
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirInd {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Direct => Ok(DirInd::Direct(Direct::try_from(reader)?)),
-            ParamType::Indirect => Ok(DirInd::Indirect(Indirect::try_from(reader)?)),
-            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
         }
     }
 }

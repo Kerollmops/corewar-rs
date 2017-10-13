@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::ALT_DIR_SIZE;
 use instruction::mem_size::ConstMemSize;
@@ -10,11 +9,13 @@ use machine::Machine;
 use process::Context;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AltDirect(i16);
+pub struct AltDirect(pub i16);
 
 impl AltDirect {
-    pub fn value(&self) -> i16 {
-        self.0
+    pub fn read_from<R: Read>(reader: &mut R) -> io::Result<Self> {
+        let value = reader.read_i16::<BigEndian>()?;
+        let alt_direct = AltDirect(value);
+        Ok(alt_direct)
     }
 }
 
@@ -31,27 +32,6 @@ impl GetValue for AltDirect {
 impl WriteTo for AltDirect {
     fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write_i16::<BigEndian>(self.0)
-    }
-}
-
-impl<'a, R: Read> TryFrom<&'a mut R> for AltDirect {
-    type Error = io::Error;
-
-    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
-        let value = reader.read_i16::<BigEndian>()?;
-        Ok(AltDirect::from(value))
-    }
-}
-
-impl From<i16> for AltDirect {
-    fn from(value: i16) -> Self {
-        AltDirect(value)
-    }
-}
-
-impl From<AltDirect> for i16 {
-    fn from(alt_direct: AltDirect) -> Self {
-        alt_direct.0
     }
 }
 

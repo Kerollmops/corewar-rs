@@ -1,5 +1,4 @@
 use std::io::{self, Read, Write};
-use std::convert::TryFrom;
 use std::fmt;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::write_to::WriteTo;
@@ -95,6 +94,12 @@ impl fmt::Debug for ParamCode {
 }
 
 impl ParamCode {
+    pub fn read_from<R: Read>(reader: &mut R) -> io::Result<Self> {
+        let value = reader.read_u8()?;
+        let param_code = ParamCode(value);
+        Ok(param_code)
+    }
+
     pub fn null() -> Self {
         ParamCode(0)
     }
@@ -122,14 +127,6 @@ impl ParamCode {
 impl WriteTo for ParamCode {
     fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write_u8(self.0)
-    }
-}
-
-impl<'a, R: Read> TryFrom<&'a mut R> for ParamCode {
-    type Error = io::Error;
-
-    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
-        Ok(ParamCode(reader.read_u8()?))
     }
 }
 

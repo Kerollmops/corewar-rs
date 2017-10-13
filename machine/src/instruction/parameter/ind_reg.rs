@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{Indirect, Register, RegisterError, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::InvalidParamType;
@@ -44,6 +43,16 @@ pub enum IndReg {
     Register(Register),
 }
 
+impl IndReg {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: & mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Indirect => Ok(IndReg::Indirect(Indirect::read_from(reader)?)),
+            ParamType::Register => Ok(IndReg::Register(Register::read_from(reader)?)),
+            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
+        }
+    }
+}
+
 impl GetValue for IndReg {
     fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
         match *self {
@@ -83,18 +92,6 @@ impl WriteTo for IndReg {
         match *self {
             IndReg::Indirect(indirect) => indirect.write_to(writer),
             IndReg::Register(register) => register.write_to(writer),
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for IndReg {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Indirect => Ok(IndReg::Indirect(Indirect::try_from(reader)?)),
-            ParamType::Register => Ok(IndReg::Register(Register::try_from(reader)?)),
-            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
         }
     }
 }

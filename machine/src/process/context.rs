@@ -46,14 +46,12 @@ impl Index<Register> for Registers {
     type Output = i32;
 
     fn index(&self, index: Register) -> &Self::Output {
-        let index: u8 = index.into();
-        &self.inner[index as usize - 1]
+        &self.inner[*index as usize - 1]
     }
 }
 
 impl IndexMut<Register> for Registers {
     fn index_mut(&mut self, index: Register) -> &mut Self::Output {
-        let index: u8 = index.into();
-        &mut self.inner[index as usize - 1]
+        &mut self.inner[*index as usize - 1]
     }
 }

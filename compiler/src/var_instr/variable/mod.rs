@@ -16,7 +16,6 @@ pub use self::var_alt_dir_ind::VarAltDirInd;
 pub use self::var_alt_dir_ind_reg::VarAltDirIndReg;
 pub use self::var_alt_dir_reg::VarAltDirReg;
 
-use std::convert::TryFrom;
 use std::collections::HashMap;
 use pest::Error;
 use machine::instruction::mem_size::{MemSize, ConstMemSize};
@@ -55,12 +54,12 @@ impl FromPair for Variable<Direct> {
                 match pair_value.as_rule() {
                     ::Rule::number => {
                         let number = i32::from_str_radix(span_value.clone().as_str(), 10);
-                        number.map(|n| Variable::Complete(Direct::from(n)))
+                        number.map(|n| Variable::Complete(Direct(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::hexnumber => {
                         let number = i32::from_str_radix(&span_value.clone().as_str()[2..], 16);
-                        number.map(|n| Variable::Complete(Direct::from(n)))
+                        number.map(|n| Variable::Complete(Direct(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::label_call => Ok(Variable::Incomplete(Label::from(pair_value))),
@@ -82,7 +81,7 @@ impl AsComplete<Direct> for Variable<Direct> {
             Variable::Incomplete(ref label) => {
                 let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
-                Ok(Direct::from(value as i32))
+                Ok(Direct(value as i32))
             },
         }
     }
@@ -97,12 +96,12 @@ impl FromPair for Variable<AltDirect> {
                 match pair_value.as_rule() {
                     ::Rule::number => {
                         let number = i16::from_str_radix(span_value.clone().as_str(), 10);
-                        number.map(|n| Variable::Complete(AltDirect::from(n)))
+                        number.map(|n| Variable::Complete(AltDirect(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::hexnumber => {
                         let number = i16::from_str_radix(&span_value.clone().as_str()[2..], 16);
-                        number.map(|n| Variable::Complete(AltDirect::from(n)))
+                        number.map(|n| Variable::Complete(AltDirect(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::label_call => Ok(Variable::Incomplete(Label::from(pair_value))),
@@ -124,7 +123,7 @@ impl AsComplete<AltDirect> for Variable<AltDirect> {
             Variable::Incomplete(ref label) => {
                 let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
-                Ok(AltDirect::from(value as i16))
+                Ok(AltDirect(value as i16))
             },
         }
     }
@@ -139,12 +138,12 @@ impl FromPair for Variable<Indirect> {
                 match pair_value.as_rule() {
                     ::Rule::number => {
                         let number = i16::from_str_radix(span_value.clone().as_str(), 10);
-                        number.map(|n| Variable::Complete(Indirect::from(n)))
+                        number.map(|n| Variable::Complete(Indirect(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::hexnumber => {
                         let number = i16::from_str_radix(&span_value.clone().as_str()[2..], 16);
-                        number.map(|n| Variable::Complete(Indirect::from(n)))
+                        number.map(|n| Variable::Complete(Indirect(n)))
                               .map_err(|e| Error::CustomErrorSpan { message: e.to_string(), span: span_value })
                     },
                     ::Rule::label_call => Ok(Variable::Incomplete(Label::from(pair_value))),
@@ -166,7 +165,7 @@ impl AsComplete<Indirect> for Variable<Indirect> {
             Variable::Incomplete(ref label) => {
                 let label_offset = *label_offsets.get(label).ok_or_else(|| LabelNotFound(label.clone()))?;
                 let value = label_offset as isize - offset as isize;
-                Ok(Indirect::from(value as i16))
+                Ok(Indirect(value as i16))
             },
         }
     }
@@ -180,7 +179,7 @@ impl FromPair for Register {
                 let span_number = pair_number.clone().into_span();
                 let number = u8::from_str_radix(span_number.clone().as_str(), 10);
                 number.map_err(|e| e.to_string())
-                      .and_then(|n| Register::try_from(n).map_err(|e| e.to_string()))
+                      .and_then(|n| Register::new(n).map_err(|e| e.to_string()))
                       .map_err(|message| Error::CustomErrorSpan { message, span: span_number })
             },
             _ => Err(Error::CustomErrorSpan {

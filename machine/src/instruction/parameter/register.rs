@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
-use std::fmt;
-use std::convert::TryFrom;
+use std::{ops, fmt};
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use instruction::parameter::REG_SIZE;
 use instruction::mem_size::ConstMemSize;
@@ -41,8 +40,25 @@ impl fmt::Display for InvalidRegister {
 pub struct Register(u8);
 
 impl Register {
-    pub fn value(&self) -> u8 {
-        self.0
+    pub fn new(number: u8) -> Result<Self, InvalidRegister> {
+        match number {
+            number @ 1...REG_MAX => Ok(Register(number)),
+            number => Err(InvalidRegister(number)),
+        }
+    }
+
+    pub fn read_from<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let value = reader.read_u8()?;
+        let register = Register::new(value)?;
+        Ok(register)
+    }
+}
+
+impl ops::Deref for Register {
+    type Target = u8;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -59,32 +75,6 @@ impl GetValue for Register {
 impl WriteTo for Register {
     fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write_u8(self.0)
-    }
-}
-
-impl<'a, R: Read> TryFrom<&'a mut R> for Register {
-    type Error = Error;
-
-    fn try_from(reader: &'a mut R) -> Result<Self, Error> {
-        let value = reader.read_u8()?;
-        Ok(Register::try_from(value)?)
-    }
-}
-
-impl TryFrom<u8> for Register {
-    type Error = InvalidRegister;
-
-    fn try_from(value: u8) -> Result<Self, InvalidRegister> {
-        match value {
-            value @ 1...REG_MAX => Ok(Register(value)),
-            value => Err(InvalidRegister(value)),
-        }
-    }
-}
-
-impl From<Register> for u8 {
-    fn from(reg: Register) -> Self {
-        reg.0
     }
 }
 

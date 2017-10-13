@@ -1,6 +1,3 @@
-#![feature(try_from)]
-#![feature(concat_idents)]
-#![feature(const_fn)]
 #![feature(const_size_of)]
 
 extern crate byteorder;

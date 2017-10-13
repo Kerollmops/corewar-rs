@@ -6,7 +6,6 @@ mod write_to;
 
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use byteorder::ReadBytesExt;
 use instruction::mem_size::ConstMemSize;
 use self::parameter::*;
@@ -224,134 +223,134 @@ impl Instruction {
     pub fn read_from<R: Read>(mut reader: R) -> Result<Self, Error> {
         Ok(match reader.read_u8()? {
             1 => {
-                let dir = Direct::try_from(&mut reader)?;
+                let dir = Direct::read_from(&mut reader)?;
 
                 Live(dir)
             },
             2 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::First)?;
 
-                let dir_ind = DirInd::try_from((param_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let dir_ind = DirInd::read_from(param_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 Load(dir_ind, reg)
             },
             3 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let param_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let reg = Register::try_from(&mut reader)?;
-                let ind_reg = IndReg::try_from((param_type, &mut reader))?;
+                let reg = Register::read_from(&mut reader)?;
+                let ind_reg = IndReg::read_from(param_type, &mut reader)?;
 
                 Store(reg, ind_reg)
             },
             4 => {
-                let reg_a = Register::try_from(&mut reader)?;
-                let reg_b = Register::try_from(&mut reader)?;
-                let reg_c = Register::try_from(&mut reader)?;
+                let reg_a = Register::read_from(&mut reader)?;
+                let reg_b = Register::read_from(&mut reader)?;
+                let reg_c = Register::read_from(&mut reader)?;
 
                 Addition(reg_a, reg_b, reg_c)
             },
             5 => {
-                let reg_a = Register::try_from(&mut reader)?;
-                let reg_b = Register::try_from(&mut reader)?;
-                let reg_c = Register::try_from(&mut reader)?;
+                let reg_a = Register::read_from(&mut reader)?;
+                let reg_b = Register::read_from(&mut reader)?;
+                let reg_c = Register::read_from(&mut reader)?;
 
                 Substraction(reg_a, reg_b, reg_c)
             },
             6 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let dir_ind_reg_a = DirIndReg::read_from(first_type, &mut reader)?;
+                let dir_ind_reg_b = DirIndReg::read_from(second_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 And(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             7 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let dir_ind_reg_a = DirIndReg::read_from(first_type, &mut reader)?;
+                let dir_ind_reg_b = DirIndReg::read_from(second_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 Or(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             8 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let dir_ind_reg_a = DirIndReg::try_from((first_type, &mut reader))?;
-                let dir_ind_reg_b = DirIndReg::try_from((second_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let dir_ind_reg_a = DirIndReg::read_from(first_type, &mut reader)?;
+                let dir_ind_reg_b = DirIndReg::read_from(second_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 Xor(dir_ind_reg_a, dir_ind_reg_b, reg)
             },
             9 => {
-                let alt_dir = AltDirect::try_from(&mut reader)?;
+                let alt_dir = AltDirect::read_from(&mut reader)?;
 
                 ZJump(alt_dir)
             },
             10 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let alt_dir_ind_reg = AltDirIndReg::try_from((first_type, &mut reader))?;
-                let alt_dir_reg = AltDirReg::try_from((second_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let alt_dir_ind_reg = AltDirIndReg::read_from(first_type, &mut reader)?;
+                let alt_dir_reg = AltDirReg::read_from(second_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 LoadIndex(alt_dir_ind_reg, alt_dir_reg, reg)
             },
             11 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
                 let third_type = param_code.param_type_of(ParamNumber::Third)?;
 
-                let reg = Register::try_from(&mut reader)?;
-                let alt_dir_ind_reg = AltDirIndReg::try_from((second_type, &mut reader))?;
-                let alt_dir_reg = AltDirReg::try_from((third_type, &mut reader))?;
+                let reg = Register::read_from(&mut reader)?;
+                let alt_dir_ind_reg = AltDirIndReg::read_from(second_type, &mut reader)?;
+                let alt_dir_reg = AltDirReg::read_from(third_type, &mut reader)?;
 
                 StoreIndex(reg, alt_dir_ind_reg, alt_dir_reg)
             },
             12 => {
-                let alt_dir = AltDirect::try_from(&mut reader)?;
+                let alt_dir = AltDirect::read_from(&mut reader)?;
 
                 Fork(alt_dir)
             },
             13 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
 
-                let dir_ind = DirInd::try_from((first_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let dir_ind = DirInd::read_from(first_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 LongLoad(dir_ind, reg)
             },
             14 => {
-                let param_code = ParamCode::try_from(&mut reader)?;
+                let param_code = ParamCode::read_from(&mut reader)?;
                 let first_type = param_code.param_type_of(ParamNumber::First)?;
                 let second_type = param_code.param_type_of(ParamNumber::Second)?;
 
-                let alt_dir_ind_reg = AltDirIndReg::try_from((first_type, &mut reader))?;
-                let alt_dir_reg = AltDirReg::try_from((second_type, &mut reader))?;
-                let reg = Register::try_from(&mut reader)?;
+                let alt_dir_ind_reg = AltDirIndReg::read_from(first_type, &mut reader)?;
+                let alt_dir_reg = AltDirReg::read_from(second_type, &mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 LongLoadIndex(alt_dir_ind_reg, alt_dir_reg, reg)
             },
             15 => {
-                let alt_dir = AltDirect::try_from(&mut reader)?;
+                let alt_dir = AltDirect::read_from(&mut reader)?;
 
                 LongFork(alt_dir)
             }
             16 => {
-                let reg = Register::try_from(&mut reader)?;
+                let reg = Register::read_from(&mut reader)?;
 
                 Display(reg)
             },
@@ -513,9 +512,9 @@ impl Instruction {
 
     pub fn execute<W: Write>(&self, machine: &mut Machine, context: &mut Context, output: &mut W) -> io::Result<()> {
         match *self {
-            Live(champion_id) => {
+            Live(Direct(champion_id)) => {
                 context.cycle_since_last_live = 0;
-                machine.live_champion(champion_id.into());
+                machine.live_champion(champion_id);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             Load(dir_ind, reg) => {
@@ -572,16 +571,15 @@ impl Instruction {
                 context.carry = { result == 0 };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            ZJump(alt_dir) => if context.carry {
-                let value: i16 = alt_dir.into();
-                context.pc = context.pc.move_by(value as isize % IDX_MOD as isize);
+            ZJump(AltDirect(alt_dir)) => if context.carry {
+                context.pc = context.pc.move_by(alt_dir as isize % IDX_MOD as isize);
             } else {
                 context.pc = context.pc.advance_by(self.mem_size());
             },
             LoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let val_a = dir_ind_reg.get_value(machine, context);
                 let val_b = dir_reg.get_value(machine, context);
-                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                let addr = Indirect(val_a.wrapping_add(val_b) as i16);
                 context.registers[reg] = addr.get_value(machine, context);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
@@ -589,14 +587,13 @@ impl Instruction {
                 let value = context.registers[reg];
                 let val_a = dir_ind_reg.get_value(machine, context);
                 let val_b = dir_reg.get_value(machine, context);
-                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                let addr = Indirect(val_a.wrapping_add(val_b) as i16);
                 addr.set_value(value, machine, context);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            Fork(alt_dir) => {
-                let value: i16 = alt_dir.into();
+            Fork(AltDirect(alt_dir)) => {
                 let mut fork = context.clean_fork();
-                fork.pc = fork.pc.move_by(value as isize % IDX_MOD as isize);
+                fork.pc = fork.pc.move_by(alt_dir as isize % IDX_MOD as isize);
                 machine.new_process(fork);
                 context.pc = context.pc.advance_by(self.mem_size());
             },
@@ -609,15 +606,14 @@ impl Instruction {
             LongLoadIndex(dir_ind_reg, dir_reg, reg) => {
                 let val_a = dir_ind_reg.get_value_long(machine, context);
                 let val_b = dir_reg.get_value_long(machine, context);
-                let addr = Indirect::from(val_a.wrapping_add(val_b) as i16);
+                let addr = Indirect(val_a.wrapping_add(val_b) as i16);
                 context.registers[reg] = addr.get_value_long(machine, context);
                 context.carry = { context.pc != ArenaIndex::zero() };
                 context.pc = context.pc.advance_by(self.mem_size());
             },
-            LongFork(alt_dir) => {
-                let value: i16 = alt_dir.into();
+            LongFork(AltDirect(alt_dir)) => {
                 let mut fork = context.clean_fork();
-                fork.pc = fork.pc.move_by(value as isize);
+                fork.pc = fork.pc.move_by(alt_dir as isize);
                 machine.new_process(fork);
                 context.pc = context.pc.advance_by(self.mem_size());
             },

@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{Direct, Indirect};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::{Register, RegisterError, InvalidRegister};
@@ -42,6 +41,16 @@ pub enum DirIndReg {
     Direct(Direct),
     Indirect(Indirect),
     Register(Register),
+}
+
+impl DirIndReg {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: &mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Direct => Ok(DirIndReg::Direct(Direct::read_from(reader)?)),
+            ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::read_from(reader)?)),
+            ParamType::Register => Ok(DirIndReg::Register(Register::read_from(reader)?)),
+        }
+    }
 }
 
 impl GetValue for DirIndReg {
@@ -88,18 +97,6 @@ impl WriteTo for DirIndReg {
             DirIndReg::Direct(direct) => direct.write_to(writer),
             DirIndReg::Indirect(indirect) => indirect.write_to(writer),
             DirIndReg::Register(register) => register.write_to(writer),
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirIndReg {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Direct => Ok(DirIndReg::Direct(Direct::try_from(reader)?)),
-            ParamType::Indirect => Ok(DirIndReg::Indirect(Indirect::try_from(reader)?)),
-            ParamType::Register => Ok(DirIndReg::Register(Register::try_from(reader)?)),
         }
     }
 }

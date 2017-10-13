@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use instruction::parameter::IND_SIZE;
 use instruction::mem_size::ConstMemSize;
@@ -12,11 +11,13 @@ use process::Context;
 use core::IDX_MOD;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Indirect(i16);
+pub struct Indirect(pub i16);
 
 impl Indirect {
-    pub fn value(&self) -> i16 {
-        self.0
+    pub fn read_from<R: Read>(reader: &mut R) -> io::Result<Self> {
+        let value = reader.read_i16::<BigEndian>()?;
+        let indirect = Indirect(value);
+        Ok(indirect)
     }
 }
 
@@ -55,21 +56,6 @@ impl SetValue for Indirect {
 impl WriteTo for Indirect {
     fn write_to<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         writer.write_i16::<BigEndian>(self.0)
-    }
-}
-
-impl<'a, R: Read> TryFrom<&'a mut R> for Indirect {
-    type Error = io::Error;
-
-    fn try_from(reader: &'a mut R) -> Result<Self, Self::Error> {
-        let value = reader.read_i16::<BigEndian>()?;
-        Ok(Indirect::from(value))
-    }
-}
-
-impl From<i16> for Indirect {
-    fn from(value: i16) -> Self {
-        Indirect(value)
     }
 }
 

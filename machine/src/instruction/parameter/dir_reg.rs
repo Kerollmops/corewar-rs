@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::fmt;
-use std::convert::TryFrom;
 use instruction::parameter::{Direct, Register, RegisterError, InvalidRegister};
 use instruction::parameter::{ParamType, ParamTypeOf};
 use instruction::parameter::InvalidParamType;
@@ -44,6 +43,16 @@ pub enum DirReg {
     Register(Register),
 }
 
+impl DirReg {
+    pub fn read_from<R: Read>(param_type: ParamType, reader: &mut R) -> Result<Self, Error> {
+        match param_type {
+            ParamType::Direct => Ok(DirReg::Direct(Direct::read_from(reader)?)),
+            ParamType::Register => Ok(DirReg::Register(Register::read_from(reader)?)),
+            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
+        }
+    }
+}
+
 impl GetValue for DirReg {
     fn get_value(&self, vm: &Machine, context: &Context) -> i32 {
         match *self {
@@ -76,18 +85,6 @@ impl WriteTo for DirReg {
         match *self {
             DirReg::Direct(direct) => direct.write_to(writer),
             DirReg::Register(register) => register.write_to(writer),
-        }
-    }
-}
-
-impl<'a, R: Read> TryFrom<(ParamType, &'a mut R)> for DirReg {
-    type Error = Error;
-
-    fn try_from((param_type, reader): (ParamType, &'a mut R)) -> Result<Self, Self::Error> {
-        match param_type {
-            ParamType::Direct => Ok(DirReg::Direct(Direct::try_from(reader)?)),
-            ParamType::Register => Ok(DirReg::Register(Register::try_from(reader)?)),
-            _ => Err(Error::InvalidParamType(InvalidParamType(param_type))),
         }
     }
 }
