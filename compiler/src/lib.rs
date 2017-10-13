@@ -12,6 +12,7 @@ mod var_instr;
 mod property;
 mod label;
 
+use std::rc::Rc;
 use std::io::Write;
 use std::borrow::Cow;
 use std::mem;
@@ -55,7 +56,8 @@ pub fn compile(input: &str) -> Result<Vec<u8>, AsmError> {
 }
 
 pub fn parse_program(input: &str) -> Result<ParsedProgram, AsmError> {
-    let mut pairs = AsmParser::parse_str(Rule::asm, input)?;
+    let input = StringInput::new(input.to_string());
+    let mut pairs = AsmParser::parse(Rule::asm, Rc::new(input))?;
 
     let mut properties = HashMap::new();
     let mut label_offsets = HashMap::new();

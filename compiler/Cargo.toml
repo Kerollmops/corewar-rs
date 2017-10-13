@@ -6,7 +6,7 @@ authors = ["Kerollmops <renault.cle@gmail.com>"]
 [dependencies]
 log = "0.3"
 env_logger = "0.3"
-pest = "=1.0.0-beta.7"
-pest_derive = "=1.0.0-beta.7"
+pest = "=1.0.0-beta.15"
+pest_derive = "=1.0.0-beta.15"
 core = { path = "../core" }
 machine = { path = "../machine" }
