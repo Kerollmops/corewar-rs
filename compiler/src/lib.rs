@@ -158,7 +158,7 @@ pub fn raw_compile(name: &str, comment: &str, instrs: &[Instruction], output: &m
     let mut header = Header {
         magic: COREWAR_EXEC_MAGIC.to_be(),
         prog_name: [0u8; PROG_NAME_LENGTH + 1],
-        prog_size: (instrs.iter().map(|x| x.mem_size()).sum::<usize>() as u32).to_be(),
+        prog_size: (instrs.iter().map(MemSize::mem_size).sum::<usize>() as u32).to_be(),
         comment: [0u8; COMMENT_LENGTH + 1],
     };
 
