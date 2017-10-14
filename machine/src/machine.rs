@@ -76,6 +76,10 @@ impl Machine {
         self.processes.push(process)
     }
 
+    pub fn cycles_to_die(&self) -> usize {
+        self.cycles_to_die
+    }
+
     pub fn cycle_execute<'a, W: Write>(&'a mut self, output: &'a mut W) -> CycleExecute<'a, W> {
         CycleExecute { machine: self, output }
     }
