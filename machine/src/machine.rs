@@ -122,7 +122,7 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
             self.machine.number_of_lives = 0;
         }
 
-        cycle_info.cycles_to_die = self.machine.cycles_to_die - self.machine.cycles;
+        cycle_info.cycles_to_die = self.machine.cycles_to_die;
 
         for process in processes.iter_mut().rev() {
             let ctx = &mut process.context;
