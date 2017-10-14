@@ -1,8 +1,8 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::io::{self, Write};
 use std::mem;
 use process::{Process, Context};
-use instruction::parameter::Register;
+use instruction::parameter::{Direct, Register};
 use instruction::Instruction;
 use instruction::Error as InstrError;
 use champion::Champion;
@@ -86,10 +86,11 @@ pub struct CycleExecute<'a, W: 'a + Write> {
     output: &'a mut W,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CycleInfo {
     pub remaining_processes: usize,
     pub cycles_to_die: usize,
+    pub lives_counter: HashMap<i32, usize>,
     pub last_living_champion: Option<i32>,
 }
 
@@ -100,7 +101,10 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
         let mut processes = Vec::new();
         mem::swap(&mut processes, &mut self.machine.processes);
 
-        let mut cycle_info = CycleInfo::default();
+        let mut cycle_info = CycleInfo {
+            lives_counter: HashMap::with_capacity(self.machine.champions.len()),
+            ..Default::default()
+        };
 
         self.machine.cycles += 1;
         if self.machine.cycles >= self.machine.cycles_to_die {
@@ -130,6 +134,13 @@ impl<'a, W: 'a + Write> Iterator for CycleExecute<'a, W> {
                     None => Instruction::execute_noop(ctx)
                 }
                 trace!("execute {:?}", instr);
+
+                if let Some(Instruction::Live(Direct(champion_id))) = *instr {
+                    if self.machine.champions.contains_key(&champion_id) {
+                        let counter = cycle_info.lives_counter.entry(champion_id).or_insert(0);
+                        *counter += 1;
+                    }
+                }
 
                 let reader = self.machine.arena.read_from(ctx.pc);
                 *instr = match Instruction::read_from(reader) {
